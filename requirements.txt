@@ -5,6 +5,5 @@ streamlit
 streamlit-extras
 openai
 boto3
-json
 io
 os
