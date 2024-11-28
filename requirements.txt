@@ -2,7 +2,6 @@ langchain
 langchain_community
 pypdf
 streamlit
-pickle
 streamlit-extras
 openai
 boto3
