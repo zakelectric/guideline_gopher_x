@@ -12,10 +12,6 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-import fitz
-import datetime
-import mimetypes
-import requests
 import json
 import boto3
 from botocore.exceptions import NoCredentialsError
