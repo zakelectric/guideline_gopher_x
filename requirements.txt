@@ -1,0 +1,10 @@
+langchain
+pypdf
+streamlit
+pickle
+streamlit-extras
+openai
+boto3
+json
+io
+os
