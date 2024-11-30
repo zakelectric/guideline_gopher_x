@@ -20,7 +20,7 @@ import pandas as pd
 import json
 from typing import List, Dict
 import tempfile
-
+import asyncio
 
 #################### CONFIGURATION ####################
 
@@ -133,156 +133,107 @@ class MortgageGuidelinesAnalyzer:
                     return None
             return None
 
-    def upload_to_s3(self, file, filename: str) -> str:
-        """Upload file to S3 and return the URL"""
-        try:
-            self.s3_client.upload_fileobj(file, self.bucket_name, f"guidelines/{filename}")
-            return f"s3://{self.bucket_name}/guidelines/{filename}"
-        except Exception as e:
-            st.error(f"Failed to upload to S3: {str(e)}")
-            return None
 
-    def save_vector_store(self, investor_name: str):
-        """Save vector store to local and push to GitHub"""
-        if self.vector_store:
-            local_path = f"vector_stores/{investor_name}"
-            self.vector_store.save_local(local_path)
-            # Add GitHub push logic here if needed
-            return local_path
-        return None
+async def load_and_query_investor(s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
 
-    # def load_and_process_pdf(self, uploaded_file):
-    #     """Process single uploaded PDF"""
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-    #         tmp_file.write(uploaded_file.getvalue())
-    #         tmp_file.flush()
+    try:
+        # Create temp dir for this investor's files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Download .faiss and .pkl files
+            for ext in ['.faiss', '.pkl']:
+                file_key = f"{investor_prefix}{ext}"
+                local_path = os.path.join(temp_dir, f"index{ext}")
+                s3_client.download_file(bucket, file_key, local_path)
             
-    #         investor = os.path.splitext(uploaded_file.name)[0]
+            # Load the vector store
+            vector_store = FAISS.load_local(temp_dir, embeddings)
             
-    #         loader = PyPDFLoader(tmp_file.name)
-    #         pdf_docs = loader.load()
+            # Search
+            relevant_chunks = vector_store.similarity_search(query, k=10)
             
-    #         text_splitter = RecursiveCharacterTextSplitter(
-    #             chunk_size=1000,
-    #             chunk_overlap=200
-    #         )
-            
-    #         chunks = text_splitter.split_documents(pdf_docs)
-            
-    #         for chunk in chunks:
-    #             chunk.metadata.update({
-    #                 "investor": investor,
-    #                 "source": uploaded_file.name
-    #             })
-            
-    #         # Upload to S3
-    #         s3_url = self.upload_to_s3(uploaded_file, uploaded_file.name)
-    #         if s3_url:
-    #             for chunk in chunks:
-    #                 chunk.metadata["s3_url"] = s3_url
-            
-    #         # Create/update vector store
-    #         if self.vector_store:
-    #             self.vector_store.add_documents(chunks)
-    #         else:
-    #             self.vector_store = FAISS.from_documents(chunks, self.embeddings)
-            
-    #         # Save vector store
-    #         vector_store_path = self.save_vector_store(investor)
-            
-    #         os.unlink(tmp_file.name)
-    #         return investor, s3_url, vector_store_path
-        
-    def load_and_process_pdf(self, uploaded_file):
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            tmp_file.flush()
-            
-            investor = os.path.splitext(uploaded_file.name)[0]
-            
-            loader = PyPDFLoader(tmp_file.name)
-            pdf_docs = loader.load()
-            
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200
-            )
-            
-            chunks = text_splitter.split_documents(pdf_docs)
-            
-            for chunk in chunks:
-                chunk.metadata.update({
-                    "investor": investor,
-                    "source": uploaded_file.name
-                })
-            
-            # Upload PDF to S3
-            s3_url = self.upload_to_s3(uploaded_file, uploaded_file.name)
-            if s3_url:
-                for chunk in chunks:
-                    chunk.metadata["s3_url"] = s3_url
-            
-            # Create/update vector store
-            if self.vector_store:
-                self.vector_store.add_documents(chunks)
-            else:
-                self.vector_store = FAISS.from_documents(chunks, self.embeddings)
-            
-            # Save vector store to S3
-            self.save_vector_store_to_s3(investor)
-            
-            os.unlink(tmp_file.name)
-            return investor, s3_url
-
-    def query_guidelines(self, query: str) -> Dict:
-        if not self.vector_store:
-            return {"error": "No guidelines loaded yet"}
-            
-        structured_criteria_response = self.llm.invoke(
-            self.query_parser_prompt.format(query=query)
-        )
-        structured_criteria = self._parse_llm_response(structured_criteria_response)
-        
-        if not structured_criteria:
-            return {"error": "Failed to parse query"}
-        
-        relevant_chunks = self.vector_store.similarity_search(query, k=10)
-        
-        results = []
-        for chunk in relevant_chunks:
-            analysis_response = self.llm.invoke(
-                self.guidelines_analyzer_prompt.format(
-                    criteria=json.dumps(structured_criteria),
-                    content=chunk.page_content
+            # Process results
+            results = []
+            for chunk in relevant_chunks:
+                analysis_response = llm.invoke(
+                    guidelines_analyzer_prompt.format(
+                        criteria=json.dumps(structured_criteria),
+                        content=chunk.page_content
+                    )
                 )
-            )
+                
+                analysis = json.loads(analysis_response.content)
+                
+                if analysis and analysis.get('matches', False):
+                    results.append({
+                        "investor": chunk.metadata.get("investor", "Unknown"),
+                        "confidence": analysis.get('confidence_score', 0),
+                        "details": analysis.get('relevant_details', ''),
+                        "restrictions": analysis.get('restrictions', []),
+                        "source_url": chunk.metadata.get("s3_url", "")
+                    })
             
-            analysis = self._parse_llm_response(analysis_response)
-            
-            if analysis and analysis.get('matches', False):
-                results.append({
-                    "investor": chunk.metadata.get("investor", "Unknown"),
-                    "confidence": analysis.get('confidence_score', 0),
-                    "details": analysis.get('relevant_details', ''),
-                    "restrictions": analysis.get('restrictions', []),
-                    "source_url": chunk.metadata.get("s3_url", "")
-                })
-        
-        seen_investors = set()
-        unique_results = []
-        for result in results:
-            if result['investor'] not in seen_investors:
-                seen_investors.add(result['investor'])
-                unique_results.append(result)
-        
-        return {
-            "query_understanding": structured_criteria,
-            "matching_investors": unique_results,
-            "total_matches": len(unique_results)
-        }
+            return results
+    
+    except Exception as e:
+        print(f"Error processing {investor_prefix}: {str(e)}")
+        return []
+
+async def query_guidelines(self, query: str) -> Dict:
+    """Query all investor guidelines stored in S3"""
+    structured_criteria_response = self.llm.invoke(
+        self.query_parser_prompt.format(query=query)
+    )
+    structured_criteria = self._parse_llm_response(structured_criteria_response)
+    
+    if not structured_criteria:
+        return {"error": "Failed to parse query"}
+    
+    # List all vector stores in S3
+    response = self.s3_client.list_objects_v2(
+        Bucket=BUCKET_NAME,
+        Prefix='vector_stores/',
+        Delimiter='/'
+    )
+    
+    if 'CommonPrefixes' not in response:
+        return {"error": "No guidelines found"}
+    
+    # Create tasks for each investor
+    tasks = []
+    for prefix in response['CommonPrefixes']:
+        investor_prefix = prefix['Prefix']
+        task = load_and_query_investor(
+            self.s3_client,
+            BUCKET_NAME,
+            investor_prefix,
+            self.embeddings,
+            query,
+            structured_criteria,
+            self.llm,
+            self.guidelines_analyzer_prompt
+        )
+        tasks.append(task)
+    
+    # Run all queries in parallel
+    all_results = await asyncio.gather(*tasks)
+    
+    # Flatten results and remove duplicates
+    results = [item for sublist in all_results for item in sublist]
+    seen_investors = set()
+    unique_results = []
+    for result in results:
+        if result['investor'] not in seen_investors:
+            seen_investors.add(result['investor'])
+            unique_results.append(result)
+    
+    return {
+        "query_understanding": structured_criteria,
+        "matching_investors": unique_results,
+        "total_matches": len(unique_results)
+    }
 
 def main():
-    st.title("Mortgage Guidelines Analyzerrrr")
+    st.title("Mortgage Guidelines Analyzer")
     
     # Initialize session state
     if 'analyzer' not in st.session_state:
@@ -291,7 +242,6 @@ def main():
     
     # File uploader
     uploaded_file = st.file_uploader("Upload Guidelines PDF", type="pdf")
-    st.title("ALERT: Uploaded file")
     if uploaded_file is not None:
         st.write("ALERT: Uploaded file")
         with st.spinner("Processing PDF..."):
