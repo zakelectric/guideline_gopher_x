@@ -246,7 +246,7 @@ def main():
     if uploaded_file is not None:
         st.write("ALERT: Uploaded file")
         with st.spinner("Processing PDF..."):
-            investor, s3_url, vector_store_path = st.session_state.analyzer.load_and_process_pdf(uploaded_file)
+            investor, s3_url, vector_store_path = MortgageGuidelinesAnalyzer.load_and_process_pdf(uploaded_file)
             st.success(f"Successfully processed {investor}'s guidelines")
             st.write(f"S3 URL: {s3_url}")
             st.write(f"Vector store saved at: {vector_store_path}")
@@ -256,7 +256,7 @@ def main():
     if st.button("Search Guidelines"):
         if query:
             with st.spinner("Analyzing guidelines..."):
-                results = st.session_state.analyzer.query_guidelines(query)
+                results = MortgageGuidelinesAnalyzer.query_guidelines(query)
                 
                 if "error" in results:
                     st.error(results["error"])
