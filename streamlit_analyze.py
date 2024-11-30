@@ -282,7 +282,7 @@ class MortgageGuidelinesAnalyzer:
         }
 
 def main():
-    st.title("Mortgage Guidelines Analyzer")
+    st.title("Mortgage Guidelines Analyzerrrr")
     
     # Initialize session state
     if 'analyzer' not in st.session_state:
