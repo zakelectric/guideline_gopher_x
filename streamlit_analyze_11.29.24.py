@@ -151,49 +151,8 @@ class MortgageGuidelinesAnalyzer:
             return local_path
         return None
 
-    # def load_and_process_pdf(self, uploaded_file):
-    #     """Process single uploaded PDF"""
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-    #         tmp_file.write(uploaded_file.getvalue())
-    #         tmp_file.flush()
-            
-    #         investor = os.path.splitext(uploaded_file.name)[0]
-            
-    #         loader = PyPDFLoader(tmp_file.name)
-    #         pdf_docs = loader.load()
-            
-    #         text_splitter = RecursiveCharacterTextSplitter(
-    #             chunk_size=1000,
-    #             chunk_overlap=200
-    #         )
-            
-    #         chunks = text_splitter.split_documents(pdf_docs)
-            
-    #         for chunk in chunks:
-    #             chunk.metadata.update({
-    #                 "investor": investor,
-    #                 "source": uploaded_file.name
-    #             })
-            
-    #         # Upload to S3
-    #         s3_url = self.upload_to_s3(uploaded_file, uploaded_file.name)
-    #         if s3_url:
-    #             for chunk in chunks:
-    #                 chunk.metadata["s3_url"] = s3_url
-            
-    #         # Create/update vector store
-    #         if self.vector_store:
-    #             self.vector_store.add_documents(chunks)
-    #         else:
-    #             self.vector_store = FAISS.from_documents(chunks, self.embeddings)
-            
-    #         # Save vector store
-    #         vector_store_path = self.save_vector_store(investor)
-            
-    #         os.unlink(tmp_file.name)
-    #         return investor, s3_url, vector_store_path
-        
     def load_and_process_pdf(self, uploaded_file):
+        """Process single uploaded PDF"""
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file.flush()
@@ -216,7 +175,7 @@ class MortgageGuidelinesAnalyzer:
                     "source": uploaded_file.name
                 })
             
-            # Upload PDF to S3
+            # Upload to S3
             s3_url = self.upload_to_s3(uploaded_file, uploaded_file.name)
             if s3_url:
                 for chunk in chunks:
@@ -228,11 +187,11 @@ class MortgageGuidelinesAnalyzer:
             else:
                 self.vector_store = FAISS.from_documents(chunks, self.embeddings)
             
-            # Save vector store to S3
-            self.save_vector_store_to_s3(investor)
+            # Save vector store
+            vector_store_path = self.save_vector_store(investor)
             
             os.unlink(tmp_file.name)
-            return investor, s3_url
+            return investor, s3_url, vector_store_path
 
     def query_guidelines(self, query: str) -> Dict:
         if not self.vector_store:
