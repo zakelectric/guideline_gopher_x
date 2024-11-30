@@ -25,12 +25,12 @@ import asyncio
 #################### CONFIGURATION ####################
 
 # Set test true or false so that the Gopher uses the test AWS bucket or the regular bucket
-test = True
+test = False
 
 if test == True:
-    BUCKET_NAME = 'guidelinegopher-test'
+    BUCKET_NAME = 'guideline-gopher-x-test'
 if test == False:
-    BUCKET_NAME = 'guidelinegopher'
+    BUCKET_NAME = 'guideline-gopher-x'
 
 st.set_page_config(layout="wide")
 
@@ -133,104 +133,105 @@ class MortgageGuidelinesAnalyzer:
                     return None
             return None
 
+################################################################################################################################################################################
+    async def load_and_query_investor(s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
 
-async def load_and_query_investor(s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
-
-    try:
-        # Create temp dir for this investor's files
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Download .faiss and .pkl files
-            for ext in ['.faiss', '.pkl']:
-                file_key = f"{investor_prefix}{ext}"
-                local_path = os.path.join(temp_dir, f"index{ext}")
-                s3_client.download_file(bucket, file_key, local_path)
-            
-            # Load the vector store
-            vector_store = FAISS.load_local(temp_dir, embeddings)
-            
-            # Search
-            relevant_chunks = vector_store.similarity_search(query, k=10)
-            
-            # Process results
-            results = []
-            for chunk in relevant_chunks:
-                analysis_response = llm.invoke(
-                    guidelines_analyzer_prompt.format(
-                        criteria=json.dumps(structured_criteria),
-                        content=chunk.page_content
+        try:
+            # Create temp dir for this investor's files
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Download .faiss and .pkl files
+                for ext in ['.faiss', '.pkl']:
+                    file_key = f"{investor_prefix}{ext}"
+                    local_path = os.path.join(temp_dir, f"index{ext}")
+                    s3_client.download_file(bucket, file_key, local_path)
+                
+                # Load the vector store
+                vector_store = FAISS.load_local(temp_dir, embeddings)
+                
+                # Search
+                relevant_chunks = vector_store.similarity_search(query, k=10)
+                
+                # Process results
+                results = []
+                for chunk in relevant_chunks:
+                    analysis_response = llm.invoke(
+                        guidelines_analyzer_prompt.format(
+                            criteria=json.dumps(structured_criteria),
+                            content=chunk.page_content
+                        )
                     )
-                )
+                    
+                    analysis = json.loads(analysis_response.content)
+                    
+                    if analysis and analysis.get('matches', False):
+                        results.append({
+                            "investor": chunk.metadata.get("investor", "Unknown"),
+                            "confidence": analysis.get('confidence_score', 0),
+                            "details": analysis.get('relevant_details', ''),
+                            "restrictions": analysis.get('restrictions', []),
+                            "source_url": chunk.metadata.get("s3_url", "")
+                        })
                 
-                analysis = json.loads(analysis_response.content)
-                
-                if analysis and analysis.get('matches', False):
-                    results.append({
-                        "investor": chunk.metadata.get("investor", "Unknown"),
-                        "confidence": analysis.get('confidence_score', 0),
-                        "details": analysis.get('relevant_details', ''),
-                        "restrictions": analysis.get('restrictions', []),
-                        "source_url": chunk.metadata.get("s3_url", "")
-                    })
-            
-            return results
-    
-    except Exception as e:
-        print(f"Error processing {investor_prefix}: {str(e)}")
-        return []
+                return results
+        
+        except Exception as e:
+            print(f"Error processing {investor_prefix}: {str(e)}")
+            return []
 
-async def query_guidelines(self, query: str) -> Dict:
-    """Query all investor guidelines stored in S3"""
-    structured_criteria_response = self.llm.invoke(
-        self.query_parser_prompt.format(query=query)
-    )
-    structured_criteria = self._parse_llm_response(structured_criteria_response)
-    
-    if not structured_criteria:
-        return {"error": "Failed to parse query"}
-    
-    # List all vector stores in S3
-    response = self.s3_client.list_objects_v2(
-        Bucket=BUCKET_NAME,
-        Prefix='vector_stores/',
-        Delimiter='/'
-    )
-    
-    if 'CommonPrefixes' not in response:
-        return {"error": "No guidelines found"}
-    
-    # Create tasks for each investor
-    tasks = []
-    for prefix in response['CommonPrefixes']:
-        investor_prefix = prefix['Prefix']
-        task = load_and_query_investor(
-            self.s3_client,
-            BUCKET_NAME,
-            investor_prefix,
-            self.embeddings,
-            query,
-            structured_criteria,
-            self.llm,
-            self.guidelines_analyzer_prompt
+###########################################################################################################################################################
+    async def query_guidelines(self, query: str) -> Dict:
+        """Query all investor guidelines stored in S3"""
+        structured_criteria_response = self.llm.invoke(
+            self.query_parser_prompt.format(query=query)
         )
-        tasks.append(task)
-    
-    # Run all queries in parallel
-    all_results = await asyncio.gather(*tasks)
-    
-    # Flatten results and remove duplicates
-    results = [item for sublist in all_results for item in sublist]
-    seen_investors = set()
-    unique_results = []
-    for result in results:
-        if result['investor'] not in seen_investors:
-            seen_investors.add(result['investor'])
-            unique_results.append(result)
-    
-    return {
-        "query_understanding": structured_criteria,
-        "matching_investors": unique_results,
-        "total_matches": len(unique_results)
-    }
+        structured_criteria = self._parse_llm_response(structured_criteria_response)
+        
+        if not structured_criteria:
+            return {"error": "Failed to parse query"}
+        
+        # List all vector stores in S3
+        response = self.s3_client.list_objects_v2(
+            Bucket=BUCKET_NAME,
+            Prefix='vector_stores/',
+            Delimiter='/'
+        )
+        
+        if 'CommonPrefixes' not in response:
+            return {"error": "No guidelines found"}
+        
+        # Create tasks for each investor
+        tasks = []
+        for prefix in response['CommonPrefixes']:
+            investor_prefix = prefix['Prefix']
+            task = st.session_state.analyzer.load_and_query_investor(
+                self.s3_client,
+                BUCKET_NAME,
+                investor_prefix,
+                self.embeddings,
+                query,
+                structured_criteria,
+                self.llm,
+                self.guidelines_analyzer_prompt
+            )
+            tasks.append(task)
+        
+        # Run all queries in parallel
+        all_results = await asyncio.gather(*tasks)
+        
+        # Flatten results and remove duplicates
+        results = [item for sublist in all_results for item in sublist]
+        seen_investors = set()
+        unique_results = []
+        for result in results:
+            if result['investor'] not in seen_investors:
+                seen_investors.add(result['investor'])
+                unique_results.append(result)
+        
+        return {
+            "query_understanding": structured_criteria,
+            "matching_investors": unique_results,
+            "total_matches": len(unique_results)
+        }
 
 def main():
     st.title("Mortgage Guidelines Analyzer")
