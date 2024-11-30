@@ -291,6 +291,7 @@ def main():
     
     # File uploader
     uploaded_file = st.file_uploader("Upload Guidelines PDF", type="pdf")
+    st.write("ALERT: Uploaded file")
     if uploaded_file is not None:
         st.write("ALERT: Uploaded file")
         with st.spinner("Processing PDF..."):
