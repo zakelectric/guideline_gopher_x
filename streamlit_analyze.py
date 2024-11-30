@@ -292,6 +292,7 @@ def main():
     # File uploader
     uploaded_file = st.file_uploader("Upload Guidelines PDF", type="pdf")
     if uploaded_file:
+        st.write("ALERT: Uploaded file")
         with st.spinner("Processing PDF..."):
             investor, s3_url, vector_store_path = st.session_state.analyzer.load_and_process_pdf(uploaded_file)
             st.success(f"Successfully processed {investor}'s guidelines")
