@@ -134,58 +134,64 @@ class MortgageGuidelinesAnalyzer:
             return None
 
 ################################################################################################################################################################################
-    async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
-        st.write("DEBUG 1")
-        st.write("BUCKET:", bucket)
-        try:
-            # Create temp dir for this investor's files
-            with tempfile.TemporaryDirectory() as temp_dir:
-                st.write("INVESTOR PREFIX:", investor_prefix)
-                # Download .faiss and .pkl files
-                for ext in ['.faiss', '.pkl']:
-                    st.write("EXT:", ext)
-                    file_key = f"{investor_prefix}{"index"}{ext}"
-                    st.write("FILE KEY:", file_key)
-                    local_path = os.path.join(temp_dir, f"index{ext}")
-                    st.write("LOCAL PATH:", local_path)
-                    st.write("TEMP DIR:", temp_dir)
-                    s3_client.download_file(bucket, file_key, local_path)
-                    st.write("DEBUG 3")
+async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
+    st.write("DEBUG 1")
+    st.write("BUCKET:", bucket)
+    try:
+        # Create temp dir for this investor's files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            st.write("INVESTOR PREFIX:", investor_prefix)
+            
+            # The FAISS files in S3
+            faiss_key = f"{investor_prefix}index.faiss"
+            pkl_key = f"{investor_prefix}index.pkl"
+            
+            # The local paths must match exactly what FAISS expects
+            local_faiss = os.path.join(temp_dir, "index.faiss")
+            local_pkl = os.path.join(temp_dir, "docstore.pkl")
+            
+            # Download both files
+            st.write(f"Downloading {faiss_key} to {local_faiss}")
+            s3_client.download_file(bucket, faiss_key, local_faiss)
+            
+            st.write(f"Downloading {pkl_key} to {local_pkl}")
+            s3_client.download_file(bucket, pkl_key, local_pkl)
+            
+            st.write("Files downloaded, attempting to load vector store")
+            # Load the vector store
+            vector_store = FAISS.load_local(temp_dir, embeddings)
+            st.write("LOADED VECTOR STORE:", vector_store)
                 
-                # Load the vector store
-                vector_store = FAISS.load_local(temp_dir, embeddings)
-                st.write("LOADED VECTOR STORE:", vector_store)
-                
-                # Search
-                relevant_chunks = vector_store.similarity_search(query, k=10)
-                st.write("RELEVANT CHUNKS:", relevant_chunks)
-                
-                # Process results
-                results = []
-                for chunk in relevant_chunks:
-                    analysis_response = llm.invoke(
-                        guidelines_analyzer_prompt.format(
-                            criteria=json.dumps(structured_criteria),
-                            content=chunk.page_content
-                        )
+            # Search
+            relevant_chunks = vector_store.similarity_search(query, k=10)
+            st.write("RELEVANT CHUNKS:", relevant_chunks)
+            
+            # Process results
+            results = []
+            for chunk in relevant_chunks:
+                analysis_response = llm.invoke(
+                    guidelines_analyzer_prompt.format(
+                        criteria=json.dumps(structured_criteria),
+                        content=chunk.page_content
                     )
-                    
-                    analysis = json.loads(analysis_response.content)
-                    
-                    if analysis and analysis.get('matches', False):
-                        results.append({
-                            "investor": chunk.metadata.get("investor", "Unknown"),
-                            "confidence": analysis.get('confidence_score', 0),
-                            "details": analysis.get('relevant_details', ''),
-                            "restrictions": analysis.get('restrictions', []),
-                            "source_url": chunk.metadata.get("s3_url", "")
-                        })
+                )
                 
-                return results
+                analysis = json.loads(analysis_response.content)
+                
+                if analysis and analysis.get('matches', False):
+                    results.append({
+                        "investor": chunk.metadata.get("investor", "Unknown"),
+                        "confidence": analysis.get('confidence_score', 0),
+                        "details": analysis.get('relevant_details', ''),
+                        "restrictions": analysis.get('restrictions', []),
+                        "source_url": chunk.metadata.get("s3_url", "")
+                    })
+            
+            return results
         
-        except Exception as e:
-            print(f"Error processing {investor_prefix}: {str(e)}")
-            return []
+    except Exception as e:
+        print(f"Error processing {investor_prefix}: {str(e)}")
+        return []
 
 ###########################################################################################################################################################
     async def query_guidelines(self, query: str) -> Dict:
