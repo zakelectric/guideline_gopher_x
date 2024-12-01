@@ -154,6 +154,7 @@ class MortgageGuidelinesAnalyzer:
                 
                 # Load the vector store
                 st.write("EMBEDDINNGS", self.embeddings)
+                st.write("Contents of temp_dir:", os.listdir(temp_dir))
                 self.vector_store = FAISS.load_local(temp_dir, self.embeddings)
                 st.write("LOADED VECTOR STORE:", self.vector_store)
                 
