@@ -139,11 +139,14 @@ class MortgageGuidelinesAnalyzer:
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
-                st.write("DEBUG 2")
+                st.write("INVESTOR PREFIX:", investor_prefix)
+                st.write("EXT:", ext)
                 # Download .faiss and .pkl files
                 for ext in ['.faiss', '.pkl']:
                     file_key = f"{investor_prefix}{ext}"
+                    st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
+                    st.write("LOCAL PATH:", local_path)
                     s3_client.download_file(bucket, file_key, local_path)
                 st.write("DEBUG 3")
                 
