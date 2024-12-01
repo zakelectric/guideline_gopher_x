@@ -195,7 +195,7 @@ class MortgageGuidelinesAnalyzer:
             Prefix='vector_stores/',
             Delimiter='/'
         )
-        st.write(response)
+        st.write("HELLO THERE")
         print("HELLOOOOO")
         
         if 'CommonPrefixes' not in response:
