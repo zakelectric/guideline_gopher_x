@@ -157,7 +157,7 @@ class MortgageGuidelinesAnalyzer:
                     try:
                         st.write("Attempting to load vector store...")
                         self.vector_store = FAISS.load_local(temp_dir, self.embeddings, allow_dangerous_deserialization=True)
-                        st.write("Vector store loaded successfully")
+                        st.write("Vector store loaded successfully:", self.vector_store)
                     except Exception as e:
                         st.write("Error loading vector store:")
                         st.write(f"Error type: {type(e)}")
@@ -172,28 +172,6 @@ class MortgageGuidelinesAnalyzer:
                                 st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
-
-                   # st.write("LOADED VECTOR STORE:", self.vector_store)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                
-                # Load the vector store
-              #  st.write("EMBEDDINNGS", self.embeddings)
-              #  st.write("Contents of temp_dir:", os.listdir(temp_dir))
-                self.vector_store = FAISS.load_local(temp_dir, self.embeddings)
-                st.write("LOADED VECTOR STORE:", self.vector_store)
                 
                 # Search
                 relevant_chunks = self.vector_store.similarity_search(query, k=10)
