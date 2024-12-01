@@ -134,7 +134,7 @@ class MortgageGuidelinesAnalyzer:
             return None
 
 ################################################################################################################################################################################
-    async def load_and_query_investor(s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
+    async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
 
         try:
             # Create temp dir for this investor's files
