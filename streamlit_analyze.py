@@ -84,6 +84,7 @@ def generate_presigned_url(BUCKET_NAME, store_name_pdf, expiration=7200):
 class MortgageGuidelinesAnalyzer:
     def __init__(self, openai_api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        st.write("EMBEDDINNGS", self.embeddings)
         self.llm = ChatOpenAI(
             model_name="gpt-4-turbo-preview",
             temperature=0,
