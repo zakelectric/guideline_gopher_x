@@ -5,3 +5,4 @@ streamlit
 streamlit-extras
 openai
 boto3
+faiss-cpu
