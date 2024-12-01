@@ -150,6 +150,7 @@ class MortgageGuidelinesAnalyzer:
                 
                 # Search
                 relevant_chunks = vector_store.similarity_search(query, k=10)
+                st.write("RELEVANT CHUNKS:", relevant_chunks)
                 
                 # Process results
                 results = []
