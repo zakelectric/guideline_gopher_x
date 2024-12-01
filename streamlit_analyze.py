@@ -141,49 +141,20 @@ class MortgageGuidelinesAnalyzer:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
                 st.write("INVESTOR PREFIX:", investor_prefix)
-            
-                # The FAISS files in S3
-                faiss_key = f"{investor_prefix}index.faiss"
-                pkl_key = f"{investor_prefix}index.pkl"
+                # Download .faiss and .pkl files
+                for ext in ['.faiss', '.pkl']:
+                    st.write("EXT:", ext)
+                    file_key = f"{investor_prefix}{"index"}{ext}"
+                    st.write("FILE KEY:", file_key)
+                    local_path = os.path.join(temp_dir, f"index{ext}")
+                    st.write("LOCAL PATH:", local_path)
+                    st.write("TEMP DIR:", temp_dir)
+                    s3_client.download_file(bucket, file_key, local_path)
+                    st.write("DEBUG 3")
                 
-                # The local paths must match exactly what FAISS expects
-                local_faiss = os.path.join(temp_dir, "index.faiss")
-                local_pkl = os.path.join(temp_dir, "docstore.pkl")
-                
-                # Download both files
-                st.write(f"Downloading {faiss_key} to {local_faiss}")
-                s3_client.download_file(bucket, faiss_key, local_faiss)
-                
-                st.write(f"Downloading {pkl_key} to {local_pkl}")
-                s3_client.download_file(bucket, pkl_key, local_pkl)
-                
-                st.write("Files downloaded, attempting to load vector store")
                 # Load the vector store
-                vector_store = FAISS.load_local(temp_dir, embeddings)
+                vector_store = FAISS.load_local(temp_dir, self.embeddings)
                 st.write("LOADED VECTOR STORE:", vector_store)
-
-
-
-
-
-
-
-
-                # st.write("INVESTOR PREFIX:", investor_prefix)
-                # # Download .faiss and .pkl files
-                # for ext in ['.faiss', '.pkl']:
-                #     st.write("EXT:", ext)
-                #     file_key = f"{investor_prefix}{"index"}{ext}"
-                #     st.write("FILE KEY:", file_key)
-                #     local_path = os.path.join(temp_dir, f"index{ext}")
-                #     st.write("LOCAL PATH:", local_path)
-                #     st.write("TEMP DIR:", temp_dir)
-                #     s3_client.download_file(bucket, file_key, local_path)
-                #     st.write("DEBUG 3")
-                
-                # # Load the vector store
-                # vector_store = FAISS.load_local(temp_dir, embeddings)
-                # st.write("LOADED VECTOR STORE:", vector_store)
                 
                 # Search
                 relevant_chunks = vector_store.similarity_search(query, k=10)
