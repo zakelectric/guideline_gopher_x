@@ -147,6 +147,7 @@ class MortgageGuidelinesAnalyzer:
                 
                 # Load the vector store
                 vector_store = FAISS.load_local(temp_dir, embeddings)
+                st.write("VECTOR STORE:", vector_store)
                 
                 # Search
                 relevant_chunks = vector_store.similarity_search(query, k=10)
