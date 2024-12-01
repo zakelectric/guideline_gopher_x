@@ -150,7 +150,7 @@ class MortgageGuidelinesAnalyzer:
                     st.write("LOCAL PATH:", local_path)
                     st.write("TEMP DIR:", temp_dir)
                     s3_client.download_file(bucket, file_key, local_path)
-                st.write("DEBUG 3")
+                    st.write("DEBUG 3")
                 
                 # Load the vector store
                 vector_store = FAISS.load_local(temp_dir, embeddings)
