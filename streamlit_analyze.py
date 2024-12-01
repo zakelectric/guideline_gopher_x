@@ -141,12 +141,10 @@ class MortgageGuidelinesAnalyzer:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
                 st.write("INVESTOR PREFIX:", investor_prefix)
-                investor_name = investor_prefix.split('/')[1] if investor_prefix.split('/')[1] else investor_prefix.split('/')[0]
-                st.write("INVESTOR NAME:", investor_name)
                 # Download .faiss and .pkl files
                 for ext in ['.faiss', '.pkl']:
                     st.write("EXT:", ext)
-                    file_key = f"{investor_prefix}{investor_name}{ext}"
+                    file_key = f"{investor_prefix}{"index"}{ext}"
                     st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     st.write("LOCAL PATH:", local_path)
