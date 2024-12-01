@@ -256,7 +256,7 @@ def main():
     if st.button("Search Guidelines"):
         if query:
             with st.spinner("Analyzing guidelines..."):
-                results = st.session_state.analyzer.query_guidelines(query)
+                results = asyncio.run(st.session_state.analyzer.query_guidelines(query))
                 
                 if "error" in results:
                     st.error(results["error"])
