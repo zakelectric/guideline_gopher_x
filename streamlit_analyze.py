@@ -199,7 +199,7 @@ class MortgageGuidelinesAnalyzer:
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
         
-        # Create tasks for each investor
+        # Create tasks for each investors
         tasks = []
         for prefix in response['CommonPrefixes']:
             investor_prefix = prefix['Prefix']
