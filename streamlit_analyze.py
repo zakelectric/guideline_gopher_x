@@ -181,8 +181,6 @@ class MortgageGuidelinesAnalyzer:
 ###########################################################################################################################################################
     async def query_guidelines(self, query: str) -> Dict:
         
-        st.write("HELLO THERE")
-        print("HELLOOOOO")
 
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
@@ -198,8 +196,7 @@ class MortgageGuidelinesAnalyzer:
             Prefix='vector_stores/',
             Delimiter='/'
         )
-        st.write("HELLO THERE")
-        print("HELLOOOOO")
+        st.write("VECTOR STORES:", response)
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
