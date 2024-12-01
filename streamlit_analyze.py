@@ -203,7 +203,7 @@ class MortgageGuidelinesAnalyzer:
         tasks = []
         for prefix in response['CommonPrefixes']:
             investor_prefix = prefix['Prefix']
-            task = st.session_state.analyzer.load_and_query_investor(
+            task = self.load_and_query_investor(
                 self.s3_client,
                 BUCKET_NAME,
                 investor_prefix,
