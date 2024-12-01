@@ -135,22 +135,22 @@ class MortgageGuidelinesAnalyzer:
 
 ################################################################################################################################################################################
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
-        st.write("DEBUG 1")
-        st.write("BUCKET:", bucket)
+        #st.write("DEBUG 1")
+        #st.write("BUCKET:", bucket)
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
-                st.write("INVESTOR PREFIX:", investor_prefix)
+                #st.write("INVESTOR PREFIX:", investor_prefix)
                 # Download .faiss and .pkl files
                 for ext in ['.faiss', '.pkl']:
-                    st.write("EXT:", ext)
+                    #st.write("EXT:", ext)
                     file_key = f"{investor_prefix}{"index"}{ext}"
-                    st.write("FILE KEY:", file_key)
+                    #st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
-                    st.write("LOCAL PATH:", local_path)
-                    st.write("TEMP DIR:", temp_dir)
+                    #st.write("LOCAL PATH:", local_path)
+                    #st.write("TEMP DIR:", temp_dir)
                     s3_client.download_file(bucket, file_key, local_path)
-                    st.write("DEBUG 3")
+                    #st.write("DEBUG 3")
 
 
 
@@ -173,7 +173,7 @@ class MortgageGuidelinesAnalyzer:
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
 
-                    st.write("LOADED VECTOR STORE:", self.vector_store)
+                   # st.write("LOADED VECTOR STORE:", self.vector_store)
 
 
 
@@ -190,8 +190,8 @@ class MortgageGuidelinesAnalyzer:
 
                 
                 # Load the vector store
-                st.write("EMBEDDINNGS", self.embeddings)
-                st.write("Contents of temp_dir:", os.listdir(temp_dir))
+              #  st.write("EMBEDDINNGS", self.embeddings)
+              #  st.write("Contents of temp_dir:", os.listdir(temp_dir))
                 self.vector_store = FAISS.load_local(temp_dir, self.embeddings)
                 st.write("LOADED VECTOR STORE:", self.vector_store)
                 
