@@ -180,7 +180,10 @@ class MortgageGuidelinesAnalyzer:
 
 ###########################################################################################################################################################
     async def query_guidelines(self, query: str) -> Dict:
-        """Query all investor guidelines stored in S3"""
+        
+        st.write("HELLO THERE")
+        print("HELLOOOOO")
+
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
