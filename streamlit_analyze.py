@@ -136,6 +136,7 @@ class MortgageGuidelinesAnalyzer:
 ################################################################################################################################################################################
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
         st.write("DEBUG 1")
+        st.write("BUCKET:", bucket)
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
