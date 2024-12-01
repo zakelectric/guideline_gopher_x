@@ -196,6 +196,7 @@ class MortgageGuidelinesAnalyzer:
             Delimiter='/'
         )
         st.write(response)
+        print("HELLOOOOO")
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
