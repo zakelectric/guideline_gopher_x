@@ -135,19 +135,21 @@ class MortgageGuidelinesAnalyzer:
 
 ################################################################################################################################################################################
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
-
+        st.write("DEBUG 1")
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
+                st.write("DEBUG 2")
                 # Download .faiss and .pkl files
                 for ext in ['.faiss', '.pkl']:
                     file_key = f"{investor_prefix}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     s3_client.download_file(bucket, file_key, local_path)
+                st.write("DEBUG 3")
                 
                 # Load the vector store
                 vector_store = FAISS.load_local(temp_dir, embeddings)
-                st.write("VECTOR STORE:", vector_store)
+                st.write("LOADED VECTOR STORE:", vector_store)
                 
                 # Search
                 relevant_chunks = vector_store.similarity_search(query, k=10)
