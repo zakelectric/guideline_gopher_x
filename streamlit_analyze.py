@@ -195,6 +195,7 @@ class MortgageGuidelinesAnalyzer:
             Prefix='vector_stores/',
             Delimiter='/'
         )
+        st.write(response)
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
