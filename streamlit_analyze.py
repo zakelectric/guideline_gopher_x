@@ -151,6 +151,43 @@ class MortgageGuidelinesAnalyzer:
                     st.write("TEMP DIR:", temp_dir)
                     s3_client.download_file(bucket, file_key, local_path)
                     st.write("DEBUG 3")
+
+
+
+                    try:
+                        st.write("Attempting to load vector store...")
+                        self.vector_store = FAISS.load_local(temp_dir, self.embeddings)
+                        st.write("Vector store loaded successfully")
+                    except Exception as e:
+                        st.write("Error loading vector store:")
+                        st.write(f"Error type: {type(e)}")
+                        st.write(f"Error message: {str(e)}")
+                
+                    # Try to read the first few bytes of each file
+                    for file in os.listdir(temp_dir):
+                        file_path = os.path.join(temp_dir, file)
+                        try:
+                            with open(file_path, 'rb') as f:
+                                first_bytes = f.read(100)
+                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                        except Exception as e:
+                            st.write(f"Error reading {file}: {str(e)}")
+
+                    st.write("LOADED VECTOR STORE:", self.vector_store)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 
                 # Load the vector store
                 st.write("EMBEDDINNGS", self.embeddings)
