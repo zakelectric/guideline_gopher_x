@@ -147,6 +147,7 @@ class MortgageGuidelinesAnalyzer:
                     st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     st.write("LOCAL PATH:", local_path)
+                    st.write("TEMP DIR:", temp_dir)
                     s3_client.download_file(bucket, file_key, local_path)
                 st.write("DEBUG 3")
                 
