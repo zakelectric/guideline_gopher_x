@@ -250,7 +250,7 @@ class MortgageGuidelinesAnalyzer:
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
-        st.write("ALL RESULTS:", all_rsults)
+        st.write("ALL RESULTS:", all_results)
         # Flatten results and remove duplicates
         results = [item for sublist in all_results for item in sublist]
         seen_investors = set()
