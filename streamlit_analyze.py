@@ -174,9 +174,12 @@ class MortgageGuidelinesAnalyzer:
                             st.write(f"Error reading {file}: {str(e)}")
                 
                 # Search
-                relevant_chunks = self.vector_store.similarity_search(query, k=10)
-                st.write("RELEVANT CHUNKS:", relevant_chunks)
-                
+                try:
+                    relevant_chunks = self.vector_store.similarity_search(query, k=10)
+                    st.write("RELEVANT CHUNKS:", relevant_chunks)
+                except Exception as e:
+                    st.write("Error with relevant chunks:", e)
+
                 # Process results
                 results = []
                 for chunk in relevant_chunks:
