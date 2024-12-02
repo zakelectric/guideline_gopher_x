@@ -174,6 +174,7 @@ class MortgageGuidelinesAnalyzer:
                 # Search
                 try:
                     relevant_chunks = self.vector_store.similarity_search(query, k=10)
+                    st.write("QUERY:", query)
                     st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
@@ -189,6 +190,7 @@ class MortgageGuidelinesAnalyzer:
                     )
                     
                     analysis = json.loads(analysis_response.content)
+                    print("ANALYSIS:", analysis)
                     
                     if analysis and analysis.get('matches', False):
                         results.append({
