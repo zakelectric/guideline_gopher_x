@@ -188,11 +188,12 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
-                    #st.write("ANALYSIS RESPONSE:", analysis_response)
+                    st.write("ANALYSIS RESPONSE:", analysis_response)
 
                     
                     analysis = json.loads(analysis_response.content)
-                    st.write("ANALYSIS", analysis)
+                    print("ANALYSIS:", analysis)
+                    
                     if analysis and analysis.get('matches', False):
                         results.append({
                             "investor": chunk.metadata.get("investor", "Unknown"),
@@ -249,7 +250,6 @@ class MortgageGuidelinesAnalyzer:
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
-        st.write("ALL RESULTS:", all_results)
         
         # Flatten results and remove duplicates
         results = [item for sublist in all_results for item in sublist]
