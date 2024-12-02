@@ -188,6 +188,8 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
+                    st.write("ANALYSIS RESPONSE:", analysis_response)
+
                     
                     analysis = json.loads(analysis_response.content)
                     print("ANALYSIS:", analysis)
