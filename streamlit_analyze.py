@@ -153,9 +153,9 @@ class MortgageGuidelinesAnalyzer:
                     #st.write("DEBUG 3")
 
                     try:
-                     #   st.write("Attempting to load vector store...")
+                        st.write("Attempting to load vector store...")
                         self.vector_store = FAISS.load_local(temp_dir, self.embeddings, allow_dangerous_deserialization=True)
-                       # st.write("Vector store loaded successfully:", self.vector_store)
+                        st.write("Vector store loaded successfully:", self.vector_store)
                     except Exception as e:
                         st.write("Error loading vector store:")
                         st.write(f"Error type: {type(e)}")
@@ -167,7 +167,7 @@ class MortgageGuidelinesAnalyzer:
                         try:
                             with open(file_path, 'rb') as f:
                                 first_bytes = f.read(100)
-                                #st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
                 
