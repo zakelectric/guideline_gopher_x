@@ -193,7 +193,7 @@ class MortgageGuidelinesAnalyzer:
                     # Clean up the JSON from markdown content
                     raw_content = json.loads(analysis_response.content)
                     json_str = raw_content.split("```json")[1].split("```")[0].strip()
-                    st.write("RAW JSON")
+                    st.write("RAW JSON", json_str)
                     analysis = json.loads(json_str)
                     st.write("ANALYSIS:", analysis)
                     
