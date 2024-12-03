@@ -188,7 +188,7 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
-                st.write("ANALYSIS RESPONSE:", analysis_response)
+                #st.write("ANALYSIS RESPONSE:", analysis_response)
 
                 # Clean up the JSON from markdown content
                 raw_content = analysis_response.content
@@ -253,7 +253,7 @@ class MortgageGuidelinesAnalyzer:
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
-        st.write("ALL RESULTS:", all_results)
+       # st.write("ALL RESULTS:", all_results)
         # Flatten results and remove duplicates
         results = [item for sublist in all_results for item in sublist]
         seen_investors = set()
