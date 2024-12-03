@@ -190,8 +190,10 @@ class MortgageGuidelinesAnalyzer:
                     )
                     st.write("ANALYSIS RESPONSE:", analysis_response)
 
-                    
-                    analysis = json.loads(analysis_response.content)
+                    # Clean up the JSON from markdown content
+                    raw_content = json.loads(analysis_response.content)
+                    json_str = raw_content.split("```json")[1].split("```")[0].strip()
+                    analysis = json.loads(json_str)
                     st.write("ANALYSIS:", analysis)
                     
                     if analysis and analysis.get('matches', False):
