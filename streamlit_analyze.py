@@ -192,7 +192,7 @@ class MortgageGuidelinesAnalyzer:
 
                     
                     analysis = json.loads(analysis_response.content)
-                    print("ANALYSIS:", analysis)
+                    st.write("ANALYSIS:", analysis)
                     
                     if analysis and analysis.get('matches', False):
                         results.append({
