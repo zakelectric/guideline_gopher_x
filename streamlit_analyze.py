@@ -157,9 +157,9 @@ class MortgageGuidelinesAnalyzer:
                         self.vector_store = FAISS.load_local(temp_dir, self.embeddings, allow_dangerous_deserialization=True)
                         #st.write("Vector store loaded successfully:", self.vector_store)
                     except Exception as e:
-                        st.write("Error loading vector store:")
-                        st.write(f"Error type: {type(e)}")
-                        st.write(f"Error message: {str(e)}")
+                        st.write("")
+                       # st.write(f"Error type: {type(e)}")
+                       # st.write(f"Error message: {str(e)}")
                 
                     # Try to read the first few bytes of each file
                     for file in os.listdir(temp_dir):
@@ -174,7 +174,7 @@ class MortgageGuidelinesAnalyzer:
                 # Search
                 try:
                     relevant_chunks = self.vector_store.similarity_search(query, k=10)
-                    st.write("QUERY:", query)
+                  #  st.write("QUERY:", query)
                     #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
@@ -193,9 +193,9 @@ class MortgageGuidelinesAnalyzer:
                 # Clean up the JSON from markdown content
                 raw_content = analysis_response.content
                 json_str = raw_content.split("```json")[1].split("```")[0].strip()
-                st.write("RAW JSON", json_str)
+               # st.write("RAW JSON", json_str)
                 analysis = json.loads(json_str)
-                st.write("ANALYSIS:", analysis)
+               # st.write("ANALYSIS:", analysis)
                 
                 if analysis and analysis.get('matches', False):
                     results.append({
