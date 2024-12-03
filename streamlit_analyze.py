@@ -188,23 +188,23 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
-                    st.write("ANALYSIS RESPONSE:", analysis_response)
+                st.write("ANALYSIS RESPONSE:", analysis_response)
 
-                    # Clean up the JSON from markdown content
-                    raw_content = analysis_response.content
-                    json_str = raw_content.split("```json")[1].split("```")[0].strip()
-                    st.write("RAW JSON", json_str)
-                    analysis = json.loads(json_str)
-                    st.write("ANALYSIS:", analysis)
-                    
-                    if analysis and analysis.get('matches', False):
-                        results.append({
-                            "investor": chunk.metadata.get("investor", "Unknown"),
-                            "confidence": analysis.get('confidence_score', 0),
-                            "details": analysis.get('relevant_details', ''),
-                            "restrictions": analysis.get('restrictions', []),
-                            "source_url": chunk.metadata.get("s3_url", "")
-                        })
+                # Clean up the JSON from markdown content
+                raw_content = analysis_response.content
+                json_str = raw_content.split("```json")[1].split("```")[0].strip()
+                st.write("RAW JSON", json_str)
+                analysis = json.loads(json_str)
+                st.write("ANALYSIS:", analysis)
+                
+                if analysis and analysis.get('matches', False):
+                    results.append({
+                        "investor": chunk.metadata.get("investor", "Unknown"),
+                        "confidence": analysis.get('confidence_score', 0),
+                        "details": analysis.get('relevant_details', ''),
+                        "restrictions": analysis.get('restrictions', []),
+                        "source_url": chunk.metadata.get("s3_url", "")
+                    })
                 
                 return results
         
