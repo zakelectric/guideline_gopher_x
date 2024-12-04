@@ -150,16 +150,16 @@ class MortgageGuidelinesAnalyzer:
                 for ext in ['.faiss', '.pkl']:
                     #st.write("EXT:", ext)
                     file_key = f"{investor_prefix}{"index"}{ext}"
-                    st.write("FILE KEY:", file_key)
+                    #st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
-                    st.write("LOCAL PATH:", local_path)
-                    st.write("TEMP DIR:", temp_dir)
+                    #st.write("LOCAL PATH:", local_path)
+                    #st.write("TEMP DIR:", temp_dir)
                     await asyncio.to_thread(s3_client.download_file,bucket, file_key, local_path)
-                    st.write("DEBUG 3")
+                    #st.write("DEBUG 3")
                     timenow = datetime.datetime.now()
                     utc_time = timenow.astimezone(datetime.timezone.utc)
                     formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-                    st.write(f"DEF LOAD AND QUERY INVESTOR, DOWNLOAD VECTOR: {timenow}")
+                    #st.write(f"DEF LOAD AND QUERY INVESTOR, DOWNLOAD VECTOR: {timenow}")
 
                     try:
                         #st.write("Attempting to load vector store...")
@@ -176,15 +176,15 @@ class MortgageGuidelinesAnalyzer:
                         try:
                             with open(file_path, 'rb') as f:
                                 first_bytes = f.read(100)
-                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                                #st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
                 
                 # Search
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
-                    st.write("QUERY:", query)
-                    st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    #st.write("QUERY:", query)
+                    #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
@@ -198,7 +198,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                 
-                st.write("ANALYSIS RESPONSE:", analysis_response)
+                #st.write("ANALYSIS RESPONSE:", analysis_response)
 
                 # Clean up the JSON from markdown content
                 raw_content = analysis_response.content
