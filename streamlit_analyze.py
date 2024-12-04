@@ -234,7 +234,7 @@ class MortgageGuidelinesAnalyzer:
         timenow = datetime.datetime.now()
         utc_time = timenow.astimezone(datetime.timezone.utc)
         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"LOCAL TIME1: {timenow}")
+        st.write(f"DEF QUERY GUIDELINES, AFTER QUERY PARSER PROMPT: {timenow}")
         
         if not structured_criteria:
             return {"error": "Failed to parse query"}
@@ -258,7 +258,7 @@ class MortgageGuidelinesAnalyzer:
         tasks = []
         for prefix in response['CommonPrefixes']:
             investor_prefix = prefix['Prefix']
-            task = self.load_and_query_investor(
+            task = await self.load_and_query_investor(
                 self.s3_client,
                 BUCKET_NAME,
                 investor_prefix,
