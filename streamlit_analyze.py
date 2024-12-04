@@ -224,7 +224,7 @@ class MortgageGuidelinesAnalyzer:
                 return results
         
         except Exception as e:
-            print(f"Error processing {investor_prefix}: {str(e)}")
+            st.write(f"Error processing {investor_prefix}: {str(e)}")
             return []
 
 ###########################################################################################################################################################
