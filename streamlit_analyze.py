@@ -21,6 +21,7 @@ import json
 from typing import List, Dict
 import tempfile
 import asyncio
+import datetime
 
 #################### CONFIGURATION ####################
 
@@ -291,6 +292,12 @@ def main():
     query = st.text_area("Enter your query:")
     if st.button("Search Guidelines"):
         if query:
+
+            timenow = datetime.datetime.now()
+            utc_time = timenow.astimezone(datetime.timezone.utc)
+            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+            st.write(f"LOCAL TIME: {timenow}")
+            
             with st.spinner("Analyzing guidelines..."):
                 results = asyncio.run(st.session_state.analyzer.query_guidelines(query))
                 
