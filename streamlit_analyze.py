@@ -156,6 +156,10 @@ class MortgageGuidelinesAnalyzer:
                     #st.write("TEMP DIR:", temp_dir)
                     s3_client.download_file(bucket, file_key, local_path)
                     #st.write("DEBUG 3")
+                    timenow = datetime.datetime.now()
+                    utc_time = timenow.astimezone(datetime.timezone.utc)
+                    formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+                    st.write(f"DEF LOAD AND QUERY INVESTOR, DOWNLOAD VECTOR: {timenow}")
 
                     try:
                         #st.write("Attempting to load vector store...")
