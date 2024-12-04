@@ -141,7 +141,7 @@ class MortgageGuidelinesAnalyzer:
         timenow = datetime.datetime.now()
         utc_time = timenow.astimezone(datetime.timezone.utc)
         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"LOCAL TIME4: {timenow}")
+        st.write(f"DEF LOAD AND QUERY INVESTOR, AT START: {timenow}")
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -214,7 +214,7 @@ class MortgageGuidelinesAnalyzer:
                 timenow = datetime.datetime.now()
                 utc_time = timenow.astimezone(datetime.timezone.utc)
                 formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-                st.write(f"LOCAL TIME: {timenow}")
+                st.write(f"DEF LOAD AND QUERY INVESTOR, AFTER ANALYSIS: {timenow}")
                 
                 return results
         
@@ -249,7 +249,7 @@ class MortgageGuidelinesAnalyzer:
         timenow = datetime.datetime.now()
         utc_time = timenow.astimezone(datetime.timezone.utc)
         formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"LOCAL TIME2: {timenow}")
+        st.write(f"DEF QUERY GUIDELINES, LIST ALL VECTOR STORES: {timenow}")
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
@@ -273,10 +273,14 @@ class MortgageGuidelinesAnalyzer:
             timenow = datetime.datetime.now()
             utc_time = timenow.astimezone(datetime.timezone.utc)
             formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-            st.write(f"LOCAL TIME3: {timenow}")
+            st.write(f"DEF QUERY GUIDELINES, TASKS APPENDING: {timenow}")
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
+        timenow = datetime.datetime.now()
+        utc_time = timenow.astimezone(datetime.timezone.utc)
+        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        st.write(f"DEF QUERY GUIDELINES, TASKS APPENDED: {timenow}")
        # st.write("ALL RESULTS:", all_results)
         # Flatten results and remove duplicates
         results = [item for sublist in all_results for item in sublist]
@@ -319,7 +323,7 @@ def main():
             timenow = datetime.datetime.now()
             utc_time = timenow.astimezone(datetime.timezone.utc)
             formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-            st.write(f"LOCAL TIME: {timenow}")
+            st.write(f"PUSHED BUTTON: {timenow}")
 
             with st.spinner("Analyzing guidelines..."):
                 results = asyncio.run(st.session_state.analyzer.query_guidelines(query))
