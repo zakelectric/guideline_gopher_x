@@ -154,7 +154,7 @@ class MortgageGuidelinesAnalyzer:
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     #st.write("LOCAL PATH:", local_path)
                     #st.write("TEMP DIR:", temp_dir)
-                    s3_client.download_file(bucket, file_key, local_path)
+                    await asyncio.to_thread(s3_client.download_file(bucket, file_key, local_path))
                     #st.write("DEBUG 3")
                     timenow = datetime.datetime.now()
                     utc_time = timenow.astimezone(datetime.timezone.utc)
@@ -163,7 +163,7 @@ class MortgageGuidelinesAnalyzer:
 
                     try:
                         #st.write("Attempting to load vector store...")
-                        self.vector_store = FAISS.load_local(temp_dir, self.embeddings, allow_dangerous_deserialization=True)
+                        self.vector_store = await asyncio.to_thread(FAISS.load_local(temp_dir, self.embeddings, allow_dangerous_deserialization=True))
                         #st.write("Vector store loaded successfully:", self.vector_store)
                     except Exception as e:
                         st.write("")
@@ -182,7 +182,7 @@ class MortgageGuidelinesAnalyzer:
                 
                 # Search
                 try:
-                    relevant_chunks = self.vector_store.similarity_search(query, k=10)
+                    relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search(query, k=10))
                   #  st.write("QUERY:", query)
                     #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
@@ -191,12 +191,13 @@ class MortgageGuidelinesAnalyzer:
                 # Process results
                 results = []
                 for chunk in relevant_chunks:
-                    analysis_response = llm.invoke(
+                    analysis_response = await asyncio.to_thread(llm.invoke(
                         guidelines_analyzer_prompt.format(
                             criteria=json.dumps(structured_criteria),
                             content=chunk.page_content
                         )
                     )
+                )
                 #st.write("ANALYSIS RESPONSE:", analysis_response)
 
                 # Clean up the JSON from markdown content
