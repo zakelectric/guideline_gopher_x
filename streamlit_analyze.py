@@ -176,15 +176,15 @@ class MortgageGuidelinesAnalyzer:
                         try:
                             with open(file_path, 'rb') as f:
                                 first_bytes = f.read(100)
-                          #      st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
                 
                 # Search
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search(query, k=10))
-                  #  st.write("QUERY:", query)
-                    #st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    st.write("QUERY:", query)
+                    st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
@@ -198,7 +198,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                 )
-                #st.write("ANALYSIS RESPONSE:", analysis_response)
+                st.write("ANALYSIS RESPONSE:", analysis_response)
 
                 # Clean up the JSON from markdown content
                 raw_content = analysis_response.content
