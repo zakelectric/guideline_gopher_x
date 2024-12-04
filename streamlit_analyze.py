@@ -138,6 +138,10 @@ class MortgageGuidelinesAnalyzer:
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
         #st.write("DEBUG 1")
         #st.write("BUCKET:", bucket)
+        timenow = datetime.datetime.now()
+        utc_time = timenow.astimezone(datetime.timezone.utc)
+        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        st.write(f"LOCAL TIME4: {timenow}")
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -206,6 +210,11 @@ class MortgageGuidelinesAnalyzer:
                         "restrictions": analysis.get('restrictions', []),
                         "source_url": chunk.metadata.get("s3_url", "")
                     })
+
+                timenow = datetime.datetime.now()
+                utc_time = timenow.astimezone(datetime.timezone.utc)
+                formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+                st.write(f"LOCAL TIME: {timenow}")
                 
                 return results
         
@@ -221,6 +230,11 @@ class MortgageGuidelinesAnalyzer:
             self.query_parser_prompt.format(query=query)
         )
         structured_criteria = self._parse_llm_response(structured_criteria_response)
+
+        timenow = datetime.datetime.now()
+        utc_time = timenow.astimezone(datetime.timezone.utc)
+        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        st.write(f"LOCAL TIME1: {timenow}")
         
         if not structured_criteria:
             return {"error": "Failed to parse query"}
@@ -232,6 +246,10 @@ class MortgageGuidelinesAnalyzer:
             Delimiter='/'
         )
        # st.write("VECTOR STORES:", response)
+        timenow = datetime.datetime.now()
+        utc_time = timenow.astimezone(datetime.timezone.utc)
+        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        st.write(f"LOCAL TIME2: {timenow}")
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
@@ -251,6 +269,11 @@ class MortgageGuidelinesAnalyzer:
                 self.guidelines_analyzer_prompt
             )
             tasks.append(task)
+
+            timenow = datetime.datetime.now()
+            utc_time = timenow.astimezone(datetime.timezone.utc)
+            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+            st.write(f"LOCAL TIME3: {timenow}")
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
@@ -297,7 +320,7 @@ def main():
             utc_time = timenow.astimezone(datetime.timezone.utc)
             formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
             st.write(f"LOCAL TIME: {timenow}")
-            
+
             with st.spinner("Analyzing guidelines..."):
                 results = asyncio.run(st.session_state.analyzer.query_guidelines(query))
                 
