@@ -150,12 +150,12 @@ class MortgageGuidelinesAnalyzer:
                 for ext in ['.faiss', '.pkl']:
                     #st.write("EXT:", ext)
                     file_key = f"{investor_prefix}{"index"}{ext}"
-                    #st.write("FILE KEY:", file_key)
+                    st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
-                    #st.write("LOCAL PATH:", local_path)
-                    #st.write("TEMP DIR:", temp_dir)
+                    st.write("LOCAL PATH:", local_path)
+                    st.write("TEMP DIR:", temp_dir)
                     await asyncio.to_thread(s3_client.download_file(bucket, file_key, local_path))
-                    #st.write("DEBUG 3")
+                    st.write("DEBUG 3")
                     timenow = datetime.datetime.now()
                     utc_time = timenow.astimezone(datetime.timezone.utc)
                     formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
