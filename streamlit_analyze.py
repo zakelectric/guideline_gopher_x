@@ -154,7 +154,7 @@ class MortgageGuidelinesAnalyzer:
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     st.write("LOCAL PATH:", local_path)
                     st.write("TEMP DIR:", temp_dir)
-                    await asyncio.to_thread(s3_client.download_file(bucket, file_key, local_path))
+                    await asyncio.to_thread(s3_client.download_file,bucket, file_key, local_path)
                     st.write("DEBUG 3")
                     timenow = datetime.datetime.now()
                     utc_time = timenow.astimezone(datetime.timezone.utc)
