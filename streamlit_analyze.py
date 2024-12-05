@@ -138,9 +138,9 @@ class MortgageGuidelinesAnalyzer:
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, embeddings, query: str, structured_criteria: dict, llm, guidelines_analyzer_prompt) -> Dict:
         #st.write("DEBUG 1")
         #st.write("BUCKET:", bucket)
-        timenow = datetime.datetime.now()
-        utc_time = timenow.astimezone(datetime.timezone.utc)
-        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        # timenow = datetime.datetime.now()
+        # utc_time = timenow.astimezone(datetime.timezone.utc)
+        # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
         st.write(f"DEF LOAD AND QUERY INVESTOR, AT START: {timenow}")
         try:
             # Create temp dir for this investor's files
@@ -156,9 +156,9 @@ class MortgageGuidelinesAnalyzer:
                     #st.write("TEMP DIR:", temp_dir)
                     await asyncio.to_thread(s3_client.download_file,bucket, file_key, local_path)
                     #st.write("DEBUG 3")
-                    timenow = datetime.datetime.now()
-                    utc_time = timenow.astimezone(datetime.timezone.utc)
-                    formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+                    # timenow = datetime.datetime.now()
+                    # utc_time = timenow.astimezone(datetime.timezone.utc)
+                    # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
                     #st.write(f"DEF LOAD AND QUERY INVESTOR, DOWNLOAD VECTOR: {timenow}")
 
                     try:
@@ -184,7 +184,7 @@ class MortgageGuidelinesAnalyzer:
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
                     #st.write("QUERY:", query)
-                    st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
@@ -216,10 +216,10 @@ class MortgageGuidelinesAnalyzer:
                         "source_url": chunk.metadata.get("s3_url", "")
                     })
 
-                timenow = datetime.datetime.now()
-                utc_time = timenow.astimezone(datetime.timezone.utc)
-                formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-                st.write(f"DEF LOAD AND QUERY INVESTOR, AFTER ANALYSIS: {timenow}")
+                # timenow = datetime.datetime.now()
+                # utc_time = timenow.astimezone(datetime.timezone.utc)
+                # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+                # st.write(f"DEF LOAD AND QUERY INVESTOR, AFTER ANALYSIS: {timenow}")
                 
                 return results
         
@@ -236,10 +236,10 @@ class MortgageGuidelinesAnalyzer:
         )
         structured_criteria = self._parse_llm_response(structured_criteria_response)
 
-        timenow = datetime.datetime.now()
-        utc_time = timenow.astimezone(datetime.timezone.utc)
-        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"DEF QUERY GUIDELINES, AFTER QUERY PARSER PROMPT: {timenow}")
+        # timenow = datetime.datetime.now()
+        # utc_time = timenow.astimezone(datetime.timezone.utc)
+        # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        # st.write(f"DEF QUERY GUIDELINES, AFTER QUERY PARSER PROMPT: {timenow}")
         
         if not structured_criteria:
             return {"error": "Failed to parse query"}
@@ -251,10 +251,10 @@ class MortgageGuidelinesAnalyzer:
             Delimiter='/'
         )
        # st.write("VECTOR STORES:", response)
-        timenow = datetime.datetime.now()
-        utc_time = timenow.astimezone(datetime.timezone.utc)
-        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"DEF QUERY GUIDELINES, LIST ALL VECTOR STORES: {timenow}")
+        # timenow = datetime.datetime.now()
+        # utc_time = timenow.astimezone(datetime.timezone.utc)
+        # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        # st.write(f"DEF QUERY GUIDELINES, LIST ALL VECTOR STORES: {timenow}")
         
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
@@ -275,17 +275,17 @@ class MortgageGuidelinesAnalyzer:
             )
             tasks.append(task)
 
-            timenow = datetime.datetime.now()
-            utc_time = timenow.astimezone(datetime.timezone.utc)
-            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-            st.write(f"DEF QUERY GUIDELINES, TASKS APPENDING: {timenow}")
+            # timenow = datetime.datetime.now()
+            # utc_time = timenow.astimezone(datetime.timezone.utc)
+            # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+            # st.write(f"DEF QUERY GUIDELINES, TASKS APPENDING: {timenow}")
         
         # Run all queries in parallel
         all_results = await asyncio.gather(*tasks)
-        timenow = datetime.datetime.now()
-        utc_time = timenow.astimezone(datetime.timezone.utc)
-        formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"DEF QUERY GUIDELINES, TASKS APPENDED: {timenow}")
+        # timenow = datetime.datetime.now()
+        # utc_time = timenow.astimezone(datetime.timezone.utc)
+        # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+        # st.write(f"DEF QUERY GUIDELINES, TASKS APPENDED: {timenow}")
        # st.write("ALL RESULTS:", all_results)
         # Flatten results and remove duplicates
         results = [item for sublist in all_results for item in sublist]
