@@ -136,8 +136,7 @@ class MortgageGuidelinesAnalyzer:
                 "restrictions": ["List all relevant restrictions and requirements"],
                 "credit_score": "Minimum required score for this specific scenario",
                 "loan_to_value": "Maximum allowed LTV for this specific scenario",
-                "reason_if_no_match": "If matches=false, explain why"
-            }"""),
+                "reason_if_no_match": "If matches=false, explain why"}"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
         ])
 
@@ -186,8 +185,8 @@ class MortgageGuidelinesAnalyzer:
                     file_key = f"{investor_prefix}{"index"}{ext}"
                     #st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
-                    #st.write("LOCAL PATH:", local_path)
-                    #st.write("TEMP DIR:", temp_dir)
+                    st.write("LOCAL PATH:", local_path)
+                    st.write("TEMP DIR:", temp_dir)
                     await asyncio.to_thread(s3_client.download_file,bucket, file_key, local_path)
                     #st.write("DEBUG 3")
                     # timenow = datetime.datetime.now()
@@ -210,14 +209,14 @@ class MortgageGuidelinesAnalyzer:
                         try:
                             with open(file_path, 'rb') as f:
                                 first_bytes = f.read(100)
-                                #st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
                 
                 # Search
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
-                    #st.write("QUERY:", query)
+                    st.write("QUERY:", query)
                     #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
