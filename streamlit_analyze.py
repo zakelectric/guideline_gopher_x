@@ -129,7 +129,6 @@ class MortgageGuidelinesAnalyzer:
             
             Return a VALID JSON with:
             {
-                "investor": name of investor or mortgage company
                 "matches": boolean,
                 "confidence_score": 0-100,
                 "relevant_details": "Specific guideline text that supports the match",
@@ -243,7 +242,6 @@ class MortgageGuidelinesAnalyzer:
                 
                 if analysis and analysis.get('matches', False):
                     results.append({
-                        "investor": chunk.metadata.get("investor", "Unknown"),
                         "confidence": analysis.get('confidence_score', 0),
                         "details": analysis.get('relevant_details', ''),
                         "restrictions": analysis.get('restrictions', []),
