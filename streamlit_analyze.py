@@ -242,21 +242,42 @@ class MortgageGuidelinesAnalyzer:
                 # Process results
                 results = []
                 for chunk in relevant_chunks:
-                    analysis_response = await asyncio.to_thread(llm.invoke,
-                        guidelines_analyzer_prompt.format(
-                            criteria=json.dumps(structured_criteria),
-                            content=chunk.page_content
+                    try:
+                        analysis_response = await asyncio.to_thread(llm.invoke,
+                            guidelines_analyzer_prompt.format(
+                                criteria=json.dumps(structured_criteria),
+                                content=chunk.page_content
+                            )
                         )
-                    )
-                
-                st.write("ANALYSIS RESPONSE:", analysis_response.content)
-
-                # Clean up the JSON from markdown content
-                raw_content = analysis_response.content
-                #json_str = raw_content.split("```json")[1].split("```")[0].strip()
-               # st.write("RAW JSON", json_str)
-                analysis = json.loads(raw_content)
-               # st.write("ANALYSIS:", analysis)
+                        print("LLM INVOKED SUCCESSFULLY")
+                        st.write("DEBUG - LLM Invoked Successfully")
+                    except Exception as e:
+                        print(f"LLM INVOCATION ERROR: {str(e)}")
+                        st.write(f"DEBUG - LLM Invocation Error: {str(e)}")
+                        continue
+                    
+                    # Add explicit debugging here
+                    print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
+                    st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
+                    
+                    try:
+                        # Clean up the JSON from markdown content
+                        raw_content = analysis_response.content
+                        print("RAW CONTENT:", raw_content)  # Debug raw content
+                        st.write("DEBUG - Raw Content:", raw_content)
+                        
+                        json_str = raw_content.split("```json")[1].split("```")[0].strip()
+                        print("JSON STRING:", json_str)  # Debug JSON string
+                        st.write("DEBUG - JSON String:", json_str)
+                        
+                        analysis = json.loads(json_str)
+                        print("PARSED ANALYSIS:", analysis)  # Debug parsed analysis
+                        st.write("DEBUG - Parsed Analysis:", analysis)
+                        
+                    except Exception as e:
+                        print(f"ERROR PARSING: {str(e)}")  # Debug error
+                        st.write(f"DEBUG - Error Parsing: {str(e)}")
+                        continue
                 
                 if analysis and analysis.get('matches', False):
                     results.append({
