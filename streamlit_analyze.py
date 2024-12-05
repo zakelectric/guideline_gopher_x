@@ -112,7 +112,24 @@ class MortgageGuidelinesAnalyzer:
 
         self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
              ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
-            for loan criteria matches. Return a VALID JSON with:
+            for loan criteria matches. 
+
+            IMPORTANT RULES:
+            - Only return matches=true if ALL criteria from the query are explicitly met in the guidelines
+            - Numerical requirements (LTV, credit score) must be strictly satisfied - do not make assumptions
+            - Property type and loan purpose must exactly match what's allowed
+            - If any key information is missing from the guidelines to verify a requirement, consider it a non-match
+            - Consider all restrictions and overlays that might affect eligibility
+            
+            For each guideline section, verify:
+            1. Loan type matches and is explicitly allowed
+            2. Property type is eligible with no restrictions that would deny the loan
+            3. Loan purpose is permitted for this specific program
+            4. LTV is at or below the maximum allowed for this specific scenario
+            5. Credit score meets or exceeds the minimum required
+            6. All additional criteria are satisfied
+
+            Return a VALID JSON with:
             - name of investor: string
             - matches: boolean
             - confidence_score: 0-100
@@ -185,8 +202,8 @@ class MortgageGuidelinesAnalyzer:
                 # Search
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
-                    st.write("QUERY:", query)
-                    st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    # st.write("QUERY:", query)
+                    # st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
@@ -200,16 +217,16 @@ class MortgageGuidelinesAnalyzer:
                                 content=chunk.page_content
                             )
                         )
-                        print("LLM INVOKED SUCCESSFULLY")
-                        st.write("DEBUG - LLM Invoked Successfully")
+                        # print("LLM INVOKED SUCCESSFULLY")
+                        # st.write("DEBUG - LLM Invoked Successfully")
                     except Exception as e:
                         print(f"LLM INVOCATION ERROR: {str(e)}")
                         st.write(f"DEBUG - LLM Invocation Error: {str(e)}")
                         continue
                     
                     # Add explicit debugging here
-                    print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
-                    st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
+                    # print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
+                    # st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
                     
                     try:
                         # Clean up the JSON from markdown content
