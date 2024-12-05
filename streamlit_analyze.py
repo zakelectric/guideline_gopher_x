@@ -117,8 +117,8 @@ class MortgageGuidelinesAnalyzer:
             - confidence_score: 0-100
             - relevant_details: string
             - restrictions: array of restrictions
-            - credit_score: minimum score for applicable loan product
-            - loan_to_value: maximum ltv for applicable loan product"""),
+            - credit score: minimum credit score for matching loan product in guideline
+            - loan to value: maximum ltv for matching loan product in guideline"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
         ])
 
@@ -185,7 +185,7 @@ class MortgageGuidelinesAnalyzer:
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
                     #st.write("QUERY:", query)
-                    st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    #st.write("RELEVANT CHUNKS:", relevant_chunks)
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
