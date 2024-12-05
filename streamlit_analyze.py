@@ -130,6 +130,7 @@ class MortgageGuidelinesAnalyzer:
             6. All additional criteria are satisfied
 
             Return a VALID JSON with:
+            - name of investor: string
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string
@@ -138,9 +139,6 @@ class MortgageGuidelinesAnalyzer:
             - loan to value: maximum ltv for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
         ])
-
-        #            - name of investor: string
-
 
     def _parse_llm_response(self, response):
         try:
