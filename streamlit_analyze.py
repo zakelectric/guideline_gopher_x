@@ -130,7 +130,6 @@ class MortgageGuidelinesAnalyzer:
             6. All additional criteria are satisfied
 
             Return a VALID JSON with:
-            - name of investor: string
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string
@@ -139,6 +138,9 @@ class MortgageGuidelinesAnalyzer:
             - loan to value: maximum ltv for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
         ])
+
+        #            - name of investor: string
+
 
     def _parse_llm_response(self, response):
         try:
@@ -171,8 +173,8 @@ class MortgageGuidelinesAnalyzer:
                     file_key = f"{investor_prefix}{"index"}{ext}"
                     #st.write("FILE KEY:", file_key)
                     local_path = os.path.join(temp_dir, f"index{ext}")
-                    st.write("LOCAL PATH:", local_path)
-                    st.write("TEMP DIR:", temp_dir)
+                    #st.write("LOCAL PATH:", local_path)
+                    #st.write("TEMP DIR:", temp_dir)
                     await asyncio.to_thread(s3_client.download_file,bucket, file_key, local_path)
                     #st.write("DEBUG 3")
                     # timenow = datetime.datetime.now()
@@ -195,7 +197,7 @@ class MortgageGuidelinesAnalyzer:
                         try:
                             with open(file_path, 'rb') as f:
                                 first_bytes = f.read(100)
-                                st.write(f"First bytes of {file}: {first_bytes[:20]}")
+                              #  st.write(f"First bytes of {file}: {first_bytes[:20]}")
                         except Exception as e:
                             st.write(f"Error reading {file}: {str(e)}")
                 
@@ -231,8 +233,8 @@ class MortgageGuidelinesAnalyzer:
                     try:
                         # Clean up the JSON from markdown content
                         raw_content = analysis_response.content
-                        print("RAW CONTENT:", raw_content)  # Debug raw content
-                        st.write("DEBUG - Raw Content:", raw_content)
+                        # print("RAW CONTENT:", raw_content)  # Debug raw content
+                        # st.write("DEBUG - Raw Content:", raw_content)
                         
                         json_str = raw_content.split("```json")[1].split("```")[0].strip()
                         print("JSON STRING:", json_str)  # Debug JSON string
@@ -249,7 +251,7 @@ class MortgageGuidelinesAnalyzer:
                 
                 if analysis and analysis.get('matches', False):
                     results.append({
-                        "name of investor": chunk.metadata.get("investor", "Unknown"),
+                        #"name of investor": chunk.metadata.get("investor", "Unknown"),
                         "confidence": analysis.get('confidence_score', 0),
                         "details": analysis.get('relevant_details', ''),
                         "restrictions": analysis.get('restrictions', []),
