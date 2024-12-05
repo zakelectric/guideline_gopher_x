@@ -210,10 +210,12 @@ class MortgageGuidelinesAnalyzer:
                 
                 if analysis and analysis.get('matches', False):
                     results.append({
-                        "investor": chunk.metadata.get("investor", "Unknown"),
+                        "name of investor": chunk.metadata.get("investor", "Unknown"),
                         "confidence": analysis.get('confidence_score', 0),
                         "details": analysis.get('relevant_details', ''),
                         "restrictions": analysis.get('restrictions', []),
+                        "credit score": analysis.get('credit score', 0),
+                        "loan to value": analysis.get('loan to value', 0),
                         "source_url": chunk.metadata.get("s3_url", "")
                     })
 
