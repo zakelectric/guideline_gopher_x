@@ -127,22 +127,40 @@ class MortgageGuidelinesAnalyzer:
             5. Credit score meets or exceeds the minimum required
             6. All additional criteria are satisfied
             
-            Return a VALID JSON with:
+            YOU MUST RETURN YOUR RESPONSE AS A VALID JSON OBJECT WITHOUT ANY MARKDOWN FORMATTING.
+    
+            The response must be a single JSON object with these exact fields:
+
             {
-                "name of investor": name of investor or mortgage company
                 "matches": boolean,
-                "confidence_score": 0-100,
-                "relevant_details": "Specific guideline text that supports the match",
-                "restrictions": ["List all relevant restrictions and requirements"],
-                "credit_score": "Minimum required score for this specific scenario",
-                "loan_to_value": "Maximum allowed LTV for this specific scenario",
-                "reason_if_no_match": "If matches=false, explain why"}"""),
+                "confidence_score": number,
+                "relevant_details": string,
+                "restrictions": array of strings,
+                "credit score": number,
+                "loan to value": number
+            }
+            
+            Do not include any explanatory text, markdown formatting, or code blocks in your response.
+            Only return the JSON object itself."""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
-        ])
+            ])
 
 
-        # self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
-        #     ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
+        #     {
+        #         "name of investor": name of investor or mortgage company
+        #         "matches": boolean,
+        #         "confidence_score": 0-100,
+        #         "relevant_details": "Specific guideline text that supports the match",
+        #         "restrictions": ["List all relevant restrictions and requirements"],
+        #         "credit_score": "Minimum required score for this specific scenario",
+        #         "loan_to_value": "Maximum allowed LTV for this specific scenario",
+        #         "reason_if_no_match": "If matches=false, explain why"}"""),
+        #     ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
+        # ])
+
+
+        # # self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
+        # #     ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
         #     for loan criteria matches. Return a VALID JSON with:
         #     - name of investor: string
         #     - matches: boolean
