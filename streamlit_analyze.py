@@ -109,68 +109,19 @@ class MortgageGuidelinesAnalyzer:
             ("human", "{query}")
         ])
         
+
         self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a mortgage guidelines expert analyzing provided guidelines against specific loan criteria. 
-            
-            IMPORTANT RULES:
-            - Only return matches=true if ALL criteria from the query are explicitly met in the guidelines
-            - Numerical requirements (LTV, credit score) must be strictly satisfied - do not make assumptions
-            - Property type and loan purpose must exactly match what's allowed
-            - If any key information is missing from the guidelines to verify a requirement, consider it a non-match
-            - Consider all restrictions and overlays that might affect eligibility
-            
-            For each guideline section, verify:
-            1. Loan type matches and is explicitly allowed
-            2. Property type is eligible with no restrictions that would deny the loan
-            3. Loan purpose is permitted for this specific program
-            4. LTV is at or below the maximum allowed for this specific scenario
-            5. Credit score meets or exceeds the minimum required
-            6. All additional criteria are satisfied
-            
-            YOU MUST RETURN YOUR RESPONSE AS A VALID JSON OBJECT WITHOUT ANY MARKDOWN FORMATTING.
-    
-            The response must be a single JSON object with these exact fields:
-
-            {
-                "matches": boolean,
-                "confidence_score": number,
-                "relevant_details": string,
-                "restrictions": array of strings,
-                "credit score": number,
-                "loan to value": number
-            }
-            
-            Do not include any explanatory text, markdown formatting, or code blocks in your response.
-            Only return the JSON object itself."""),
+             ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
+            for loan criteria matches. Return a VALID JSON with:
+            - name of investor: string
+            - matches: boolean
+            - confidence_score: 0-100
+            - relevant_details: string
+            - restrictions: array of restrictions
+            - credit score: minimum credit score for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria
+            - loan to value: maximum ltv for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
-            ])
-
-
-        #     {
-        #         "name of investor": name of investor or mortgage company
-        #         "matches": boolean,
-        #         "confidence_score": 0-100,
-        #         "relevant_details": "Specific guideline text that supports the match",
-        #         "restrictions": ["List all relevant restrictions and requirements"],
-        #         "credit_score": "Minimum required score for this specific scenario",
-        #         "loan_to_value": "Maximum allowed LTV for this specific scenario",
-        #         "reason_if_no_match": "If matches=false, explain why"}"""),
-        #     ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
-        # ])
-
-
-        # # self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
-        # #     ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
-        #     for loan criteria matches. Return a VALID JSON with:
-        #     - name of investor: string
-        #     - matches: boolean
-        #     - confidence_score: 0-100
-        #     - relevant_details: string
-        #     - restrictions: array of restrictions
-        #     - credit score: minimum credit score for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria
-        #     - loan to value: maximum ltv for loan product that matches criteria's loan to value, credit score, property type, purpose, and any additional criteria"""),
-        #     ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
-        # ])
+        ])
 
     def _parse_llm_response(self, response):
         try:
