@@ -141,7 +141,7 @@ class MortgageGuidelinesAnalyzer:
         # timenow = datetime.datetime.now()
         # utc_time = timenow.astimezone(datetime.timezone.utc)
         # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-        st.write(f"DEF LOAD AND QUERY INVESTOR, AT START: {timenow}")
+        #st.write(f"DEF LOAD AND QUERY INVESTOR, AT START: {timenow}")
         try:
             # Create temp dir for this investor's files
             with tempfile.TemporaryDirectory() as temp_dir:
