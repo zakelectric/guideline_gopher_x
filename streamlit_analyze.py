@@ -99,7 +99,7 @@ class MortgageGuidelinesAnalyzer:
                 "You are a mortgage guidelines expert. Extract key loan criteria from queries "
                 "into a structured format. Consider all possible ways these criteria might be expressed.\n\n"
                 "Return a VALID JSON object with these fields:\n"
-                "- loan_type (e.g., DSCR, Conventional, FHA, etc.)\n"
+                "- loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.)\n"
                 "- purpose (Purchase, Refinance, Cash-out Refi, etc.)\n"
                 "- ltv (numerical value or null)\n"
                 "- credit_score (numerical value or null)\n"
@@ -112,12 +112,13 @@ class MortgageGuidelinesAnalyzer:
         self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
             for loan criteria matches. Return a VALID JSON with:
+            - name of investor: string
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string
             - restrictions: array of restrictions
-            - credit_score: minimum score
-            - loan_to_value: maximum ltv"""),
+            - credit_score: minimum score for applicable loan product
+            - loan_to_value: maximum ltv for applicable loan product"""),
             ("human", "Query criteria: {criteria}\n\nGuideline content: {content}")
         ])
 
@@ -325,10 +326,10 @@ def main():
     if st.button("Search Guidelines"):
         if query:
 
-            timenow = datetime.datetime.now()
-            utc_time = timenow.astimezone(datetime.timezone.utc)
-            formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
-            st.write(f"PUSHED BUTTON: {timenow}")
+            # timenow = datetime.datetime.now()
+            # utc_time = timenow.astimezone(datetime.timezone.utc)
+            # formatted_utc_time = utc_time.strftime("%Y-%m-%d %H:%M:%S%z")
+            #st.write(f"PUSHED BUTTON: {timenow}")
 
             with st.spinner("Analyzing guidelines..."):
                 results = asyncio.run(st.session_state.analyzer.query_guidelines(query))
