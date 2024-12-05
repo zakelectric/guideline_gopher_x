@@ -249,7 +249,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                 
-                st.write("ANALYSIS RESPONSE:", analysis_response)
+                st.write("ANALYSIS RESPONSE:", analysis_response.content)
 
                 # Clean up the JSON from markdown content
                 raw_content = analysis_response.content
