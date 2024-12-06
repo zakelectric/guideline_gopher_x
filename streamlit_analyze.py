@@ -334,8 +334,8 @@ class MortgageGuidelinesAnalyzer:
         seen_investors = set()
         unique_results = []
         for result in results:
-            if result['name of investor'] not in seen_investors:
-                seen_investors.add(result['name of investor'])
+            if result['investor'] not in seen_investors:
+                seen_investors.add(result['investor'])
                 unique_results.append(result)
         
         return {
