@@ -86,7 +86,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, openai_api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         self.llm = ChatOpenAI(
-            model_name="gpt-4o-mini",
+            model_name="gpt-4o",
             temperature=0,
             openai_api_key=openai_api_key
         )
