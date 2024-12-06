@@ -114,28 +114,38 @@ class MortgageGuidelinesAnalyzer:
              ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
             for loan criteria matches. 
 
-            CRITICAL LOAN TYPE MATCHING:
-            - The loan type (e.g., DSCR, Bank Statement, Conventional, FHA, etc.) must EXACTLY match what's requested
-            - If the guidelines are for a different loan type than requested, return matches=false immediately
-            - Do not consider a match if the loan type isn't explicitly stated or is unclear
-            - Example: If Bank Statements are requested, DSCR guidelines are NOT a match
+            EXAMINE ALL TABLES AND MATRICES:
+            - Carefully analyze any tables, matrices, or grids in the content
+            - Check product matrices for specific loan types, LTVs, and credit score requirements
+            - Verify eligibility tables for property types and loan purposes
+            - Pay special attention to footnotes and exceptions in tables
+            - Cross-reference between different tables to ensure all requirements align
             
-            IMPORTANT RULES:
-            - Only return matches=true if ALL criteria from the query are explicitly met in the guidelines
-            - The loan program MUST specifically allow the requested documentation type (e.g., bank statements, DSCR, tax returns)
-            - Numerical requirements (LTV, credit score) must be strictly satisfied - do not make assumptions
-            - Property type and loan purpose must exactly match what's allowed
-            - If any key information is missing from the guidelines to verify a requirement, consider it a non-match
-            - Consider all restrictions and overlays that might affect eligibility
+            CRITICAL LOAN TYPE MATCHING:
+            - First, scan all tables and text for the loan program type (e.g., DSCR, Bank Statement, Conventional, FHA)
+            - The loan type must EXACTLY match what's requested - check program names and tables carefully
+            - If you find ANY indication this is a different loan program (e.g., DSCR guidelines when Bank Statements are requested), return matches=false
+            - Many guidelines contain multiple programs - ensure you're looking at the correct program section
+            
+            TABLE ANALYSIS REQUIREMENTS:
+            1. Find the specific product matrix/table for the requested loan type
+            2. Locate the exact row/column intersection for:
+            - Credit score
+            - LTV/CLTV
+            - Property type
+            - Occupancy
+            - Loan purpose
+            3. Check overlay matrices or adjustment tables for additional restrictions
+            4. Verify all footnotes and exceptions apply to this scenario
             
             VERIFICATION CHECKLIST (All must be true for a match):
-            1. Loan Type: Guidelines must explicitly be for the requested loan type
-            2. Documentation: Guidelines must specifically allow the requested documentation method
-            3. Property Type: Must be explicitly allowed with no restrictions that would deny the loan
-            4. Loan Purpose: Must be explicitly permitted for this specific program
-            5. LTV: Must be at or below the maximum allowed for this specific scenario
-            6. Credit Score: Must meet or exceed the minimum required
-            7. Property Use: Must allow the requested occupancy type (primary, investment, etc.)
+            1. Loan Program: Must be explicitly listed in tables/matrices for the requested loan type
+            2. Documentation: Tables must specifically show this documentation type is allowed
+            3. Property Type: Must appear as eligible in property type matrices
+            4. Loan Purpose: Must be listed as permitted in program matrices
+            5. LTV: Must be explicitly allowed in LTV tables/matrices for this scenario
+            6. Credit Score: Must meet minimums shown in credit score tables/matrices
+            7. Occupancy: Must be listed as eligible in occupancy tables
     
 
             Return a VALID JSON with:
