@@ -404,6 +404,8 @@ def main():
                     for investor in results["matching_investors"]:
                         with st.expander(f"{investor['name of investor']} (Confidence: {investor['confidence']}%)"):
                             st.write("Details:", investor["details"])
+                            st.write("Min credit score:", investor["credit score"])
+                            st.write("Max LTV:", investor["loan to value"])
                             st.write("Restrictions:")
                             for restriction in investor["restrictions"]:
                                 st.write(f"- {restriction}")
