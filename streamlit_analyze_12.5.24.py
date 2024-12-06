@@ -123,8 +123,8 @@ class MortgageGuidelinesAnalyzer:
             
             CRITICAL LOAN TYPE MATCHING:
             - First, scan all tables and text for the loan program type (e.g., DSCR, Bank Statement, Conventional, FHA)
-            - The loan type must EXACTLY match what's requested - check program names and tables carefully
-            - If you find ANY indication this is a different loan program (e.g., DSCR guidelines when Bank Statements are requested), return matches=false
+            - The loan type must EXACTLY match what's requested in the query. Check program names and tables carefully
+            - If you find ANY indication that the guideline contains a different loan program (e.g., DSCR guidelines when Bank Statements are requested), return matches=false
             - Many guidelines contain multiple programs - ensure you're looking at the correct program section
             
             TABLE ANALYSIS REQUIREMENTS:
@@ -244,7 +244,7 @@ class MortgageGuidelinesAnalyzer:
                         continue
                     
                     # Add explicit debugging here
-                    # print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
+                    print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
                     # st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
                     
                     try:
