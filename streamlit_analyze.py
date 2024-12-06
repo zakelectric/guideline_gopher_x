@@ -383,7 +383,7 @@ def main():
                     
                     st.subheader(f"Matching Investors ({results['total_matches']})")
                     for investor in results["matching_investors"]:
-                        with st.expander(f"{investor['investor']} (Confidence: {investor['confidence']}%)"):
+                        with st.expander(f"{investor['name of investor']} (Confidence: {investor['confidence']}%)"):
                             st.write("Details:", investor["details"])
                             st.write("Restrictions:")
                             for restriction in investor["restrictions"]:
