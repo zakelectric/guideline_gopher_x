@@ -249,7 +249,7 @@ class MortgageGuidelinesAnalyzer:
                 
                     if analysis and analysis.get('matches', False):
                         results.append({
-                            #"name of investor": chunk.metadata.get("investor", "Unknown"),
+                            "name of investor": chunk.metadata.get("investor", "Unknown"),
                             "confidence": analysis.get('confidence_score', 0),
                             "details": analysis.get('relevant_details', ''),
                             "restrictions": analysis.get('restrictions', []),
@@ -334,8 +334,8 @@ class MortgageGuidelinesAnalyzer:
         seen_investors = set()
         unique_results = []
         for result in results:
-            if result['investor'] not in seen_investors:
-                seen_investors.add(result['investor'])
+            if result['name of investor'] not in seen_investors:
+                seen_investors.add(result['name of investor'])
                 unique_results.append(result)
         
         return {
