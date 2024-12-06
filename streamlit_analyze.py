@@ -221,8 +221,13 @@ class MortgageGuidelinesAnalyzer:
                 # Search
                 try:
                     relevant_chunks = await asyncio.to_thread(self.vector_store.similarity_search, query, k=10)
-                    # st.write("QUERY:", query)
-                    # st.write("RELEVANT CHUNKS:", relevant_chunks)
+                    st.write("QUERY:", query)
+                    st.write("\nRELEVANT CHUNKS:")
+                    for i, chunk in enumerate(relevant_chunks, 1):
+                        st.write(f"\nChunk {i}:")
+                        st.write(chunk.page_content)
+                        st.write("Metadata:", chunk.metadata)
+                        st.write("---")
                 except Exception as e:
                     st.write("Error with relevant chunks:", e)
 
