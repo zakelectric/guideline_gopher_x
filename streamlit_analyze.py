@@ -235,12 +235,12 @@ class MortgageGuidelinesAnalyzer:
                         # st.write("DEBUG - Raw Content:", raw_content)
                         
                         json_str = raw_content.split("```json")[1].split("```")[0].strip()
-                        print("JSON STRING:", json_str)  # Debug JSON string
-                        st.write("DEBUG - JSON String:", json_str)
+                        # print("JSON STRING:", json_str)  # Debug JSON string
+                        # st.write("DEBUG - JSON String:", json_str)
                         
                         analysis = json.loads(json_str)
-                        print("PARSED ANALYSIS:", analysis)  # Debug parsed analysis
-                        st.write("DEBUG - Parsed Analysis:", analysis)
+                        # print("PARSED ANALYSIS:", analysis)  # Debug parsed analysis
+                        # st.write("DEBUG - Parsed Analysis:", analysis)
                         
                     except Exception as e:
                         print(f"ERROR PARSING: {str(e)}")  # Debug error
