@@ -114,20 +114,39 @@ class MortgageGuidelinesAnalyzer:
              ("system", """You are a mortgage guidelines expert analyzing provided guidelines 
             for loan criteria matches. 
 
-            IMPORTANT RULES:
-            - Only return matches=true if ALL criteria from the query are explicitly met in the guidelines
-            - Numerical requirements (LTV, credit score) must be strictly satisfied - do not make assumptions
-            - Property type and loan purpose must exactly match what's allowed
-            - If any key information is missing from the guidelines to verify a requirement, consider it a non-match
-            - Consider all restrictions and overlays that might affect eligibility
+            EXAMINE ALL TABLES AND MATRICES:
+            - Carefully analyze any tables, matrices, or grids in the content
+            - Check product matrices for specific loan types, LTVs, and credit score requirements
+            - Verify eligibility tables for property types and loan purposes
+            - Pay special attention to footnotes and exceptions in tables
+            - Cross-reference between different tables to ensure all requirements align
             
-            For each guideline section, verify:
-            1. Loan type matches and is explicitly allowed
-            2. Property type is eligible with no restrictions that would deny the loan
-            3. Loan purpose is permitted for this specific program
-            4. LTV is at or below the maximum allowed for this specific scenario
-            5. Credit score meets or exceeds the minimum required
-            6. All additional criteria are satisfied
+            CRITICAL LOAN TYPE MATCHING:
+            - First, scan all tables and text for the loan program type (e.g., DSCR, Bank Statement, Conventional, FHA)
+            - The loan type must EXACTLY match what's requested in the query. Check program names and tables carefully
+            - If you find ANY indication that the guideline contains a different loan program (e.g., DSCR guidelines when Bank Statements are requested), return matches=false
+            - Many guidelines contain multiple programs - ensure you're looking at the correct program section
+            
+            TABLE ANALYSIS REQUIREMENTS:
+            1. Find the specific product matrix/table for the requested loan type
+            2. Locate the exact row/column intersection for:
+            - Credit score
+            - LTV/CLTV
+            - Property type
+            - Occupancy
+            - Loan purpose
+            3. Check overlay matrices or adjustment tables for additional restrictions
+            4. Verify all footnotes and exceptions apply to this scenario
+            
+            VERIFICATION CHECKLIST (All must be true for a match):
+            1. Loan Program: Must be explicitly listed in tables/matrices for the requested loan type
+            2. Documentation: Tables must specifically show this documentation type is allowed
+            3. Property Type: Must appear as eligible in property type matrices
+            4. Loan Purpose: Must be listed as permitted in program matrices
+            5. LTV: Must be explicitly allowed in LTV tables/matrices for this scenario
+            6. Credit Score: Must meet minimums shown in credit score tables/matrices
+            7. Occupancy: Must be listed as eligible in occupancy tables
+    
 
             Return a VALID JSON with:
             - name of investor: string
@@ -225,8 +244,8 @@ class MortgageGuidelinesAnalyzer:
                         continue
                     
                     # Add explicit debugging here
-                    # print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
-                    # st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
+                    print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
+                    #st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
                     
                     try:
                         # Clean up the JSON from markdown content

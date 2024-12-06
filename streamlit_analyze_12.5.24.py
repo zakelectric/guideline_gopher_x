@@ -245,7 +245,7 @@ class MortgageGuidelinesAnalyzer:
                     
                     # Add explicit debugging here
                     print("ANALYSIS RESPONSE:", analysis_response)  # Using print for immediate output
-                    # st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
+                    #st.write("DEBUG - Analysis Response:", analysis_response)  # Using st.write for Streamlit display
                     
                     try:
                         # Clean up the JSON from markdown content
