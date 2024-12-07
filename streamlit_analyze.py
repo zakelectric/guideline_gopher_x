@@ -59,7 +59,7 @@ class MortgageGuidelinesAnalyzer:
         
         # Load CSV data from S3
         try:
-            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='tables/combined_tables.csv')
+            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='vector_stores/COIN - Cashflow Only Investor Loan Product Matrix/combined_tables.csv')
             csv_content = csv_obj['Body'].read().decode('utf-8')
             self.tables_data = pd.read_csv(io.StringIO(csv_content))
             st.session_state['tables_loaded'] = True
@@ -187,7 +187,7 @@ class MortgageGuidelinesAnalyzer:
             st.error(f"Error analyzing tables: {e}")
             return None
 
-    async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict) -> Dict:
+    async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         try:
             # Create temp dir for vectors
             with tempfile.TemporaryDirectory() as temp_dir:
