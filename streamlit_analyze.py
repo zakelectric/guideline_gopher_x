@@ -164,7 +164,7 @@ class MortgageGuidelinesAnalyzer:
         
         return subset
 
-    async def analyze_tables(self, criteria: dict) -> dict:
+    async def analyze_tables(self, criteria: dict):
         """Analyze the CSV tables for matching criteria"""
         if self.tables_data is None:
             return {"error": "Tables data not available"}
@@ -255,7 +255,7 @@ class MortgageGuidelinesAnalyzer:
             st.error(f"Error processing {investor_prefix}: {str(e)}")
             return []
 
-    async def query_guidelines(self, query: str) -> Dict:
+    async def query_guidelines(self, query: str):
         # Parse query into structured criteria
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
