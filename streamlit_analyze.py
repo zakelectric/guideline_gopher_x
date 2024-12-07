@@ -171,9 +171,11 @@ class MortgageGuidelinesAnalyzer:
 
         # Extract relevant subset of tables
         relevant_tables = self._extract_table_subset(criteria)
+        st.write("RELEVANT TABLES", relevant_tables)
         
         # Convert tables data to string representation for the LLM
         table_str = relevant_tables.to_string()
+        st.write("TABLE STRING", table_str)
         
         try:
             analysis = self.llm.invoke(
