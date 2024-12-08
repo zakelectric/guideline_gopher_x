@@ -114,8 +114,7 @@ class MortgageGuidelinesAnalyzer:
             agent = create_pandas_dataframe_agent(
                 llm=self.llm,
                 df=relevant_tables,
-                verbose=True,
-                allow_dangerous_code = True
+                verbose=True
             )
             
             # Create the analysis query based on criteria
@@ -128,21 +127,16 @@ class MortgageGuidelinesAnalyzer:
             - Loan Amount: {criteria.get('loan_amount', 'Not specified')}
             - DSCR Value: {criteria.get('dscr_value', 'Not specified')}
             
-            Analyze the table and return:
-            1. Whether all criteria are met
-            2. The maximum allowable LTV for this scenario
-            3. The minimum required credit score
-            4. The loan amount limits that apply
-            5. Any restrictions or footnotes
-            
-            Return the analysis as a JSON object with these fields:
-            - matches (boolean)
-            - confidence_score (0-100)
-            - max_ltv (number)
-            - min_credit_score (number)
-            - loan_amount_limits (object with min and max)
-            - restrictions (array)
-            - footnotes (array)"""
+            Analyze the table and return ONLY A VALID JSON OBJECT with these fields:
+            {
+                "matches": boolean,
+                "confidence_score": number between 0-100,
+                "max_ltv": number,
+                "min_credit_score": number,
+                "loan_amount_limits": {"min": number, "max": number},
+                "restrictions": array of strings,
+                "footnotes": array of strings
+            }"""
 
             # Run analysis
             result = agent.run(analysis_query)
@@ -152,13 +146,26 @@ class MortgageGuidelinesAnalyzer:
                 # Extract JSON from the response if it's embedded in text
                 json_match = re.search(r'\{.*\}', result, re.DOTALL)
                 if json_match:
-                    return json.loads(json_match.group(0))
-                
+                    try:
+                        return json.loads(json_match.group(0))
+                    except:
+                        return {"error": "Failed to parse JSON response",
+                            "matches": False,
+                            "confidence_score": 0}
+            
+            # If we get here and result isn't a dict, return a safe default
+            if not isinstance(result, dict):
+                return {"error": "Invalid response format",
+                    "matches": False,
+                    "confidence_score": 0}
+
             return result
 
         except Exception as e:
             st.error(f"Error in table analysis: {e}")
-            return {"error": f"Table analysis failed: {str(e)}"}
+            return {"error": f"Table analysis failed: {str(e)}",
+                    "matches": False,
+                    "confidence_score": 0}
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         try:
