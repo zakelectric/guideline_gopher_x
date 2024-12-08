@@ -12,7 +12,6 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.agents import create_pandas_dataframe_agent
 import json
 import boto3
 from botocore.exceptions import NoCredentialsError
@@ -24,8 +23,13 @@ import datetime
 
 #################### CONFIGURATION ####################
 
+# Set test true or false so that the Gopher uses the test AWS bucket or the regular bucket
 test = False
-BUCKET_NAME = 'guideline-gopher-x-test' if test else 'guideline-gopher-x'
+
+if test:
+    BUCKET_NAME = 'guideline-gopher-x-test'
+else:
+    BUCKET_NAME = 'guideline-gopher-x'
 
 st.set_page_config(layout="wide")
 
@@ -36,6 +40,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# OpenAI API key
 api_key = st.secrets["OPENAI_API_KEY"]
 
 class MortgageGuidelinesAnalyzer:
@@ -79,95 +84,124 @@ class MortgageGuidelinesAnalyzer:
             ("human", "{query}")
         ])
 
-        self.agent_analyzer_prompt = """Analyze this mortgage guideline table data for the following criteria:
-        {criteria}
-        
-        Provide a detailed analysis including:
-        1. Whether all criteria are met
-        2. The maximum allowable LTV
-        3. The minimum required credit score
-        4. Any loan amount limits
-        5. Any restrictions or footnotes that apply
-        
-        Format the results as a JSON object."""
+        self.table_analyzer_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are a mortgage guidelines expert analyzing loan criteria tables.
+            
+            EXAMINE TABLE DATA CAREFULLY:
+            1. First verify the loan type matches exactly (e.g., DSCR vs Conventional)
+            2. Find the intersection of:
+                - Credit score
+                - LTV/CLTV
+                - Property type
+                - Loan amount
+                - Loan purpose
+            3. Check all footnotes
+            4. For DSCR loans, verify the DSCR threshold
+            
+            CRITICAL TABLE ANALYSIS RULES:
+            - All numeric comparisons must be exact
+            - Property types must match exactly
+            - Loan amounts must be within specified ranges
+            - LTV/CLTV must not exceed maximums
+            - Credit scores must meet or exceed minimums
+            
+            Return a VALID JSON with:
+            - matches: boolean (true if ALL criteria are met)
+            - confidence_score: 0-100
+            - max_ltv: maximum allowed LTV
+            - min_credit_score: minimum required credit score
+            - loan_amount_limits: {min: X, max: Y}
+            - restrictions: array of restrictions
+            - footnotes: array of relevant footnotes"""),
+            ("human", "Criteria: {criteria}\n\nTable data: {table_data}")
+        ])
+
+        self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are a mortgage guidelines expert providing final analysis by combining
+            table results with supporting text guidelines.
+
+            CRITICAL ANALYSIS REQUIREMENTS:
+            1. Table results are PRIMARY and deterministic
+                - If tables show criteria aren't met, result MUST be no match
+                - Numeric criteria from tables cannot be overridden
+                - LTV and credit score limits from tables are final
+            
+            2. Text guidelines are SECONDARY and provide:
+                - Additional restrictions
+                - Clarifying details
+                - Policy requirements
+                - Documentation needs
+                - Exceptions or special cases
+            
+            Return a VALID JSON with:
+            - name of investor: string
+            - matches: boolean
+            - confidence_score: 0-100
+            - relevant_details: string
+            - restrictions: array of restrictions
+            - credit score: minimum credit score that matches all criteria
+            - loan to value: maximum ltv that matches all criteria
+            - footnotes: array of relevant footnotes"""),
+            ("human", "Table analysis: {table_results}\n\nText guidelines: {text_content}")
+        ])
 
     def _extract_table_subset(self, criteria: dict) -> pd.DataFrame:
         """Extract relevant table rows based on criteria"""
+        
+        # Start with full dataset
         subset = self.tables_data.copy()
         
-        # Show the subset for debugging
-        st.write("Initial Table Data:")
-        st.dataframe(subset)
+        # Apply filters based on available criteria
+        if criteria.get('loan_type'):
+            # Look for loan type in any column
+            loan_type_mask = subset.apply(lambda x: x.astype(str).str.contains(criteria['loan_type'], case=False)).any(axis=1)
+            subset = subset[loan_type_mask]
+            
+        if criteria.get('property_type'):
+            # Look for property type in any column
+            prop_type_mask = subset.apply(lambda x: x.astype(str).str.contains(criteria['property_type'], case=False)).any(axis=1)
+            subset = subset[prop_type_mask]
         
         return subset
 
     async def analyze_tables(self, criteria: dict):
-        """Analyze the CSV tables using the DataFrame agent"""
+        """Analyze the CSV tables for matching criteria"""
         if self.tables_data is None:
             return {"error": "Tables data not available"}
 
+        # Extract relevant subset of tables
+        relevant_tables = self._extract_table_subset(criteria)
+        st.write("RELEVANT TABLES:")
+        st.dataframe(relevant_tables)  # This shows the table in a nice scrollable format
+
+        # Convert tables data to string representation with explicit line breaks
+        table_str = relevant_tables.to_string()
+        st.write("TABLE STRING:")
+        st.code(table_str)  # st.text() preserves whitespace and line breaks
+        
         try:
-            # Extract relevant subset
-            relevant_tables = self._extract_table_subset(criteria)
-            
-            # Create DataFrame agent
-            agent = create_pandas_dataframe_agent(
-                llm=self.llm,
-                df=relevant_tables,
-                verbose=True
+            analysis = self.llm.invoke(
+                self.table_analyzer_prompt.format(
+                    criteria=json.dumps(criteria),
+                    table_data=table_str
+                )
             )
-            
-            # Create the analysis query based on criteria
-            analysis_query = f"""Given these loan criteria:
-            - Loan Type: {criteria.get('loan_type', 'Not specified')}
-            - Purpose: {criteria.get('purpose', 'Not specified')}
-            - LTV: {criteria.get('ltv', 'Not specified')}
-            - Credit Score: {criteria.get('credit_score', 'Not specified')}
-            - Property Type: {criteria.get('property_type', 'Not specified')}
-            - Loan Amount: {criteria.get('loan_amount', 'Not specified')}
-            - DSCR Value: {criteria.get('dscr_value', 'Not specified')}
-            
-            Analyze the table and return:
-            1. Whether all criteria are met
-            2. The maximum allowable LTV for this scenario
-            3. The minimum required credit score
-            4. The loan amount limits that apply
-            5. Any restrictions or footnotes
-            
-            Return the analysis as a JSON object with these fields:
-            - matches (boolean)
-            - confidence_score (0-100)
-            - max_ltv (number)
-            - min_credit_score (number)
-            - loan_amount_limits (object with min and max)
-            - restrictions (array)
-            - footnotes (array)"""
-
-            # Run analysis
-            result = agent.run(analysis_query)
-            
-            # Parse the result
-            if isinstance(result, str):
-                # Extract JSON from the response if it's embedded in text
-                json_match = re.search(r'\{.*\}', result, re.DOTALL)
-                if json_match:
-                    return json.loads(json_match.group(0))
-                
-            return result
-
+            return self._parse_llm_response(analysis)
         except Exception as e:
-            st.error(f"Error in table analysis: {e}")
-            return {"error": f"Table analysis failed: {str(e)}"}
+            st.error(f"Error analyzing tables: {e}")
+            return None
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         try:
+            # Create temp dir for vectors
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Download and load vector store
+                # Download vector store files
                 for ext in ['.faiss', '.pkl']:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     await asyncio.to_thread(s3_client.download_file, bucket, file_key, local_path)
 
+                # Load vector store
                 self.vector_store = await asyncio.to_thread(
                     FAISS.load_local, 
                     temp_dir, 
@@ -185,24 +219,39 @@ class MortgageGuidelinesAnalyzer:
                 # Combine text chunks
                 text_content = "\n".join([chunk.page_content for chunk in relevant_chunks])
 
-                # Analyze tables
+                # First analyze tables
                 table_results = await self.analyze_tables(structured_criteria)
                 
                 if not table_results or table_results.get("error"):
                     return []
 
-                # Create final response
-                if table_results.get('matches', False):
-                    return [{
-                        "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
-                        "confidence": table_results.get('confidence_score', 0),
-                        "details": text_content,
-                        "restrictions": table_results.get('restrictions', []),
-                        "credit score": table_results.get('min_credit_score', 0),
-                        "loan to value": table_results.get('max_ltv', 0),
-                        "footnotes": table_results.get('footnotes', []),
-                        "source_url": relevant_chunks[0].metadata.get("s3_url", "")
-                    }]
+                # Then combine with text analysis
+                try:
+                    final_analysis = await asyncio.to_thread(
+                        self.llm.invoke,
+                        self.guidelines_analyzer_prompt.format(
+                            table_results=json.dumps(table_results),
+                            text_content=text_content
+                        )
+                    )
+                    
+                    analysis = self._parse_llm_response(final_analysis)
+                    
+                    if analysis and analysis.get('matches', False):
+                        return [{
+                            "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
+                            "confidence": analysis.get('confidence_score', 0),
+                            "details": analysis.get('relevant_details', ''),
+                            "restrictions": analysis.get('restrictions', []),
+                            "credit score": analysis.get('credit score', 0),
+                            "loan to value": analysis.get('loan to value', 0),
+                            "footnotes": analysis.get('footnotes', []),
+                            "source_url": relevant_chunks[0].metadata.get("s3_url", "")
+                        }]
+                    
+                except Exception as e:
+                    st.error(f"Error in final analysis: {e}")
+                    return []
 
                 return []
 
@@ -230,7 +279,7 @@ class MortgageGuidelinesAnalyzer:
         if 'CommonPrefixes' not in response:
             return {"error": "No guidelines found"}
 
-        # Process all investors in parallel
+        # Create tasks for parallel processing
         tasks = []
         for prefix in response['CommonPrefixes']:
             investor_prefix = prefix['Prefix']
@@ -243,9 +292,10 @@ class MortgageGuidelinesAnalyzer:
             )
             tasks.append(task)
 
+        # Run queries in parallel
         all_results = await asyncio.gather(*tasks)
 
-        # Deduplicate results
+        # Process results
         results = [item for sublist in all_results for item in sublist]
         seen_investors = set()
         unique_results = []
