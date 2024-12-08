@@ -110,67 +110,46 @@ class MortgageGuidelinesAnalyzer:
             # Extract relevant subset
             relevant_tables = self._extract_table_subset(criteria)
             
+            st.write("Starting analysis...")  # Debug point 1
+            
             # Create DataFrame agent
             agent = create_pandas_dataframe_agent(
                 llm=self.llm,
                 df=relevant_tables,
                 verbose=True,
                 allow_dangerous_code=True,
-                max_iterations=3,  # Limit the number of operations
-                prefix="""Analyze this mortgage data in a single pass. 
-                Do not perform repeated checks. Return results immediately after first analysis."""
+                max_iterations=3,
+                prefix="""IMPORTANT: This is mortgage guideline data in a table format.
+                Analyze in ONE SINGLE PASS and return a JSON result.
+                Do not perform multiple analyses.
+                Do not explain your steps.
+                Do not do any verification."""
             )
+            
+            st.write("Agent created...")  # Debug point 2
             
             # Create the analysis query based on criteria
-            analysis_query = """Given these loan criteria:
-            - Loan Type: {loan_type}
-            - Purpose: {purpose}
-            - LTV: {ltv}
-            - Credit Score: {credit_score}
-            - Property Type: {property_type}
-            - Loan Amount: {loan_amount}
-            - DSCR Value: {dscr_value}
-
-            Analyze the table and return ONLY A VALID JSON OBJECT with these exact fields:
-            {{
-                "matches": true or false,
-                "confidence_score": a number between 0-100,
-                "max_ltv": a number,
-                "min_credit_score": a number,
-                "loan_amount_limits": {{"min": a number, "max": a number}},
+            analysis_query = """Return ONLY a JSON object with these fields based on the table data:
+            {
+                "matches": true/false,
+                "confidence_score": 0-100,
+                "max_ltv": number,
+                "min_credit_score": number,
+                "loan_amount_limits": {"min": number, "max": number},
                 "restrictions": [],
                 "footnotes": []
-            }}""".format(
-                loan_type=criteria.get('loan_type', 'Not specified'),
-                purpose=criteria.get('purpose', 'Not specified'),
-                ltv=criteria.get('ltv', 'Not specified'),
-                credit_score=criteria.get('credit_score', 'Not specified'),
-                property_type=criteria.get('property_type', 'Not specified'),
-                loan_amount=criteria.get('loan_amount', 'Not specified'),
-                dscr_value=criteria.get('dscr_value', 'Not specified')
-            )
+            }"""
 
-            # Run analysis
+            st.write("Running agent query...")  # Debug point 3
             result = agent.run(analysis_query)
+            st.write("Agent query complete")  # Debug point 4
             
-            # Parse the result
             if isinstance(result, str):
-                # Extract JSON from the response if it's embedded in text
+                st.write("Parsing result string...")  # Debug point 5
                 json_match = re.search(r'\{.*\}', result, re.DOTALL)
                 if json_match:
-                    try:
-                        return json.loads(json_match.group(0))
-                    except:
-                        return {"error": "Failed to parse JSON response",
-                            "matches": False,
-                            "confidence_score": 0}
+                    return json.loads(json_match.group(0))
             
-            # If we get here and result isn't a dict, return a safe default
-            if not isinstance(result, dict):
-                return {"error": "Invalid response format",
-                    "matches": False,
-                    "confidence_score": 0}
-
             return result
 
         except Exception as e:
