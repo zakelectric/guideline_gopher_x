@@ -115,6 +115,7 @@ class MortgageGuidelinesAnalyzer:
                 llm=self.llm,
                 df=relevant_tables,
                 verbose=True
+                allow_dangerous_code = True
             )
             
             # Create the analysis query based on criteria
