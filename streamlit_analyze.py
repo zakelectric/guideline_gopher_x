@@ -114,7 +114,8 @@ class MortgageGuidelinesAnalyzer:
             agent = create_pandas_dataframe_agent(
                 llm=self.llm,
                 df=relevant_tables,
-                verbose=True
+                verbose=True,
+                allow_dangerous_code=True
             )
             
             # Create the analysis query based on criteria
