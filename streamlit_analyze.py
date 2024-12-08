@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.agents import create_pandas_dataframe_agent
+from langchain_experimental.agents.create_pandas_dataframe_agent import create_pandas_dataframe_agent
 import json
 import boto3
 from botocore.exceptions import NoCredentialsError

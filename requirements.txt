@@ -1,5 +1,6 @@
 langchain
 langchain_community
+langchain_experimental
 pypdf
 streamlit
 streamlit-extras
