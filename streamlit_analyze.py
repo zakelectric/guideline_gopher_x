@@ -40,6 +40,12 @@ api_key = st.secrets["OPENAI_API_KEY"]
 
 class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
+        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.llm = ChatOpenAI(
+        model_name="gpt-4o-mini",
+        temperature=0,
+        openai_api_key=api_key
+    )
         
         # Query parser prompt stays the same
         self.query_parser_prompt = ChatPromptTemplate.from_messages([
