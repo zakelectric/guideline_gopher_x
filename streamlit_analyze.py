@@ -171,11 +171,13 @@ class MortgageGuidelinesAnalyzer:
 
         # Extract relevant subset of tables
         relevant_tables = self._extract_table_subset(criteria)
-        #st.write("RELEVANT TABLES", relevant_tables)
-        
-        # Convert tables data to string representation for the LLM
+        st.write("RELEVANT TABLES:")
+        st.dataframe(relevant_tables)  # This shows the table in a nice scrollable format
+
+        # Convert tables data to string representation with explicit line breaks
         table_str = relevant_tables.to_string()
-        #st.write("TABLE STRING", table_str)
+        st.write("TABLE STRING:")
+        st.text(table_str)  # st.text() preserves whitespace and line breaks
         
         try:
             analysis = self.llm.invoke(
