@@ -106,46 +106,38 @@ class MortgageGuidelinesAnalyzer:
         if self.tables_data is None:
             return {"error": "Tables data not available"}
 
-        try:
-            # Extract relevant subset
-            relevant_tables = self._extract_table_subset(criteria)
-            
-            st.write("Starting analysis...")  # Debug point 1
-            
-            # Create DataFrame agent
-            agent = create_pandas_dataframe_agent(
-                llm=self.llm,
-                df=relevant_tables,
-                verbose=True,
-                allow_dangerous_code=True,
-                max_iterations=3,
-                prefix="""IMPORTANT: This is mortgage guideline data in a table format.
-                Analyze in ONE SINGLE PASS and return a JSON result.
-                Do not perform multiple analyses.
-                Do not explain your steps.
-                Do not do any verification."""
-            )
-            
-            st.write("Agent created...")  # Debug point 2
-            
-            # Create the analysis query based on criteria
-            analysis_query = """Return ONLY a JSON object with these fields based on the table data:
-            {
-                "matches": true/false,
-                "confidence_score": 0-100,
-                "max_ltv": number,
-                "min_credit_score": number,
-                "loan_amount_limits": {"min": number, "max": number},
-                "restrictions": [],
-                "footnotes": []
-            }"""
+        if 'analysis_count' not in st.session_state:
+            st.session_state.analysis_count = 0
+        st.session_state.analysis_count += 1
+        
+        st.write(f"Analysis attempt #{st.session_state.analysis_count}")
 
-            st.write("Running agent query...")  # Debug point 3
-            result = agent.run(analysis_query)
-            st.write("Agent query complete")  # Debug point 4
-            
+        try:
+            # Extract relevant subset once
+            if 'relevant_tables' not in st.session_state:
+                st.session_state.relevant_tables = self._extract_table_subset(criteria)
+                st.write("Tables extracted:")
+                st.dataframe(st.session_state.relevant_tables)
+
+            # Create agent once
+            if 'agent' not in st.session_state:
+                st.session_state.agent = create_pandas_dataframe_agent(
+                    llm=self.llm,
+                    df=st.session_state.relevant_tables,
+                    verbose=True,
+                    allow_dangerous_code=True,
+                    max_iterations=3,
+                    prefix="IMPORTANT: Analyze mortgage data in ONE PASS. Return JSON only."
+                )
+                st.write("Agent created once")
+
+            # Run analysis once
+            result = st.session_state.agent.run("""Return JSON with:
+                {"matches": true/false, "confidence_score": 0-100, "max_ltv": number, 
+                "min_credit_score": number, "loan_amount_limits": {"min": number, "max": number},
+                "restrictions": [], "footnotes": []}""")
+
             if isinstance(result, str):
-                st.write("Parsing result string...")  # Debug point 5
                 json_match = re.search(r'\{.*\}', result, re.DOTALL)
                 if json_match:
                     return json.loads(json_match.group(0))
