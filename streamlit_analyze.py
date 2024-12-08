@@ -39,30 +39,9 @@ st.markdown(
 api_key = st.secrets["OPENAI_API_KEY"]
 
 class MortgageGuidelinesAnalyzer:
-    def __init__(self, openai_api_key: str):
-        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        self.llm = ChatOpenAI(
-            model_name="gpt-4o-mini",
-            temperature=0,
-            openai_api_key=openai_api_key
-        )
-        self.vector_store = None
-        self.s3_client = boto3.client('s3', 
-                                    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
-                                    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"])
-        self.bucket_name = BUCKET_NAME
+    def __init__(self, api_key: str):
         
-        # Load CSV data from S3
-        try:
-            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='vector_stores/COIN - Cashflow Only Investor Loan Product Matrix/combined_tables.csv')
-            csv_content = csv_obj['Body'].read().decode('utf-8')
-            self.tables_data = pd.read_csv(io.StringIO(csv_content))
-            st.session_state['tables_loaded'] = True
-        except Exception as e:
-            st.error(f"Error loading tables data from S3: {e}")
-            self.tables_data = None
-            st.session_state['tables_loaded'] = False
-
+        # Query parser prompt stays the same
         self.query_parser_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
             into a structured format. Consider all possible ways these criteria might be expressed.
@@ -79,24 +58,109 @@ class MortgageGuidelinesAnalyzer:
             ("human", "{query}")
         ])
 
-        self.agent_analyzer_prompt = """Analyze this mortgage guideline table data for the following criteria:
-        {criteria}
+        # Modify agent analyzer prompt to be more specific
+        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
+        Loan Type: {loan_type}
+        Purpose: {purpose}
+        LTV: {ltv}
+        Credit Score: {credit_score}
+        Property Type: {property_type}
+        Loan Amount: {loan_amount}
+        DSCR Value: {dscr_value}
         
-        Provide a detailed analysis including:
-        1. Whether all criteria are met
-        2. The maximum allowable LTV
-        3. The minimum required credit score
-        4. Any loan amount limits
-        5. Any restrictions or footnotes that apply
-        
-        Format the results as a JSON object."""
+        Return only a JSON object with these exact fields:
+        {
+            "matches": boolean,
+            "confidence_score": number between 0-100,
+            "max_ltv": number,
+            "min_credit_score": number,
+            "loan_amount_limits": {"min": number, "max": number},
+            "restrictions": [],
+            "footnotes": []
+        }"""
+
+    async def analyze_tables(self, criteria: dict):
+        """Analyze the CSV tables using the DataFrame agent"""
+        if self.tables_data is None:
+            return {"error": "Tables data not available"}
+
+        try:
+            # Extract relevant subset
+            relevant_tables = self._extract_table_subset(criteria)
+            st.write("Working with this table subset:")
+            st.dataframe(relevant_tables)
+
+            # Create DataFrame agent
+            agent = create_pandas_dataframe_agent(
+                llm=self.llm,
+                df=relevant_tables,
+                verbose=True,
+                allow_dangerous_code=True,
+                max_iterations=3,
+                prefix="You are analyzing mortgage guideline tables. Work with the data directly."
+            )
+            
+            # Format the analysis query using our prompt and criteria
+            analysis_query = self.agent_analyzer_prompt.format(
+                loan_type=criteria.get('loan_type', 'Not specified'),
+                purpose=criteria.get('purpose', 'Not specified'),
+                ltv=criteria.get('ltv', 'Not specified'),
+                credit_score=criteria.get('credit_score', 'Not specified'),
+                property_type=criteria.get('property_type', 'Not specified'),
+                loan_amount=criteria.get('loan_amount', 'Not specified'),
+                dscr_value=criteria.get('dscr_value', 'Not specified')
+            )
+            
+            # Run the analysis
+            st.write("Running table analysis...")
+            result = agent.run(analysis_query)
+            st.write("Raw agent response:", result)
+
+            # Parse the result
+            if isinstance(result, str):
+                try:
+                    json_match = re.search(r'\{.*\}', result, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group(0))
+                except Exception as e:
+                    st.write(f"Error parsing agent response: {e}")
+                    return {
+                        "matches": False,
+                        "confidence_score": 0,
+                        "error": "Failed to parse agent response"
+                    }
+
+            return result
+
+        except Exception as e:
+            st.error(f"Error in table analysis: {e}")
+            return {
+                "matches": False,
+                "confidence_score": 0,
+                "error": str(e)
+            }
+
 
     def _extract_table_subset(self, criteria: dict) -> pd.DataFrame:
         """Extract relevant table rows based on criteria"""
-        subset = self.tables_data.copy()
         
-        # Show the subset for debugging
-        st.write("Initial Table Data:")
+        subset = self.tables_data.copy()
+        st.write("Initial table size:", len(subset))
+        
+        # Apply filters based on available criteria
+        if criteria.get('loan_type'):
+            # Look for loan type in any column
+            loan_type_mask = subset.apply(lambda x: x.astype(str).str.contains(criteria['loan_type'], case=False)).any(axis=1)
+            subset = subset[loan_type_mask]
+            st.write(f"After loan type filter size: {len(subset)}")
+        
+        if criteria.get('property_type'):
+            # Look for property type in any column
+            prop_type_mask = subset.apply(lambda x: x.astype(str).str.contains(criteria['property_type'], case=False)).any(axis=1)
+            subset = subset[prop_type_mask]
+            st.write(f"After property type filter size: {len(subset)}")
+        
+        st.write("Final filtered table:")
         st.dataframe(subset)
         
         return subset
@@ -153,7 +217,7 @@ class MortgageGuidelinesAnalyzer:
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Download and load vector store
+                # Vector store loading stays the same
                 for ext in ['.faiss', '.pkl']:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
@@ -173,29 +237,17 @@ class MortgageGuidelinesAnalyzer:
                     k=5
                 )
 
-                # Combine text chunks
                 text_content = "\n".join([chunk.page_content for chunk in relevant_chunks])
 
-                # Analyze tables
+                # Analyze tables with structured criteria
                 table_results = await self.analyze_tables(structured_criteria)
-                st.write("Raw table results:", table_results)  # Debug line
-                st.write("Type of results:", type(table_results))  # Debug line
-
-                if isinstance(table_results, str):
-                    # Try to parse string to JSON
-                    try:
-                        table_results = json.loads(table_results)
-                    except:
-                        table_results = {
-                            "error": "Failed to parse results",
-                            "matches": False,
-                            "confidence_score": 0
-                        }
+                st.write("Table analysis results:", table_results)
 
                 if not table_results or table_results.get("error"):
+                    st.write("No matching table results found")
                     return []
 
-                # Create final response
+                # Create response if we have matches
                 if table_results.get('matches', False):
                     return [{
                         "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
@@ -215,53 +267,65 @@ class MortgageGuidelinesAnalyzer:
             return []
 
     async def query_guidelines(self, query: str):
-        # Parse query into structured criteria
-        structured_criteria_response = self.agent_analyzer_prompt.format(query=query)
+        # 1. First parse query into structured criteria using ChatPromptTemplate
+        structured_criteria_response = self.llm.invoke(
+            self.query_parser_prompt.format(query=query)
+        )
         structured_criteria = self._parse_llm_response(structured_criteria_response)
+        st.write("Parsed criteria:", structured_criteria)  # Debug line
 
         if not structured_criteria:
             return {"error": "Failed to parse query"}
 
-        # List vector stores in S3
-        response = self.s3_client.list_objects_v2(
-            Bucket=self.bucket_name,
-            Prefix='vector_stores/',
-            Delimiter='/'
-        )
-
-        if 'CommonPrefixes' not in response:
-            return {"error": "No guidelines found"}
-
-        # Process all investors in parallel
-        tasks = []
-        for prefix in response['CommonPrefixes']:
-            investor_prefix = prefix['Prefix']
-            task = self.load_and_query_investor(
-                self.s3_client,
-                self.bucket_name,
-                investor_prefix,
-                query,
-                structured_criteria
+        # 2. Now analyze using DataFrame agent with structured criteria
+        try:
+            # Create analysis query from agent_analyzer_prompt, put it in json
+            analysis_query = self.agent_analyzer_prompt.format(
+                criteria=json.dumps(structured_criteria, indent=2)
             )
-            tasks.append(task)
+            
+            # Define S3 bucket
+            response = self.s3_client.list_objects_v2(
+                Bucket=self.bucket_name,
+                Prefix='vector_stores/',
+                Delimiter='/'
+            )
 
-        all_results = await asyncio.gather(*tasks)
+            if 'CommonPrefixes' not in response:
+                return {"error": "No guidelines found"}
 
-        # Deduplicate results
-        results = [item for sublist in all_results for item in sublist]
-        seen_investors = set()
-        unique_results = []
-        
-        for result in results:
-            if result['name of investor'] not in seen_investors:
-                seen_investors.add(result['name of investor'])
-                unique_results.append(result)
+            tasks = []
+            for prefix in response['CommonPrefixes']:
+                investor_prefix = prefix['Prefix']
+                task = self.load_and_query_investor(
+                    self.s3_client,
+                    self.bucket_name,
+                    investor_prefix,
+                    query,
+                    structured_criteria  # Pass the structured criteria here
+                )
+                tasks.append(task)
 
-        return {
-            "query_understanding": structured_criteria,
-            "matching_investors": unique_results,
-            "total_matches": len(unique_results)
-        }
+            all_results = await asyncio.gather(*tasks)
+            
+            # Process results
+            results = [item for sublist in all_results for item in sublist]
+            seen_investors = set()
+            unique_results = []
+            
+            for result in results:
+                if result['name of investor'] not in seen_investors:
+                    seen_investors.add(result['name of investor'])
+                    unique_results.append(result)
+
+            return {
+                "query_understanding": structured_criteria,
+                "matching_investors": unique_results,
+                "total_matches": len(unique_results)
+            }
+        except Exception as e:
+            st.error(f"Error in query processing: {str(e)}")
+            return {"error": f"Query processing failed: {str(e)}"}
 
     def _parse_llm_response(self, response):
         try:
