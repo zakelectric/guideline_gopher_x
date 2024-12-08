@@ -119,25 +119,33 @@ class MortgageGuidelinesAnalyzer:
             )
             
             # Create the analysis query based on criteria
-            analysis_query = f"""Given these loan criteria:
-            - Loan Type: {criteria.get('loan_type', 'Not specified')}
-            - Purpose: {criteria.get('purpose', 'Not specified')}
-            - LTV: {criteria.get('ltv', 'Not specified')}
-            - Credit Score: {criteria.get('credit_score', 'Not specified')}
-            - Property Type: {criteria.get('property_type', 'Not specified')}
-            - Loan Amount: {criteria.get('loan_amount', 'Not specified')}
-            - DSCR Value: {criteria.get('dscr_value', 'Not specified')}
-            
-            Analyze the table and return ONLY A VALID JSON OBJECT with these fields:
-            {
-                "matches": boolean,
-                "confidence_score": number between 0-100,
-                "max_ltv": number,
-                "min_credit_score": number,
-                "loan_amount_limits": {"min": number, "max": number},
-                "restrictions": array of strings,
-                "footnotes": array of strings
-            }"""
+            analysis_query = """Given these loan criteria:
+            - Loan Type: {loan_type}
+            - Purpose: {purpose}
+            - LTV: {ltv}
+            - Credit Score: {credit_score}
+            - Property Type: {property_type}
+            - Loan Amount: {loan_amount}
+            - DSCR Value: {dscr_value}
+
+            Analyze the table and return ONLY A VALID JSON OBJECT with these exact fields:
+            {{
+                "matches": true or false,
+                "confidence_score": a number between 0-100,
+                "max_ltv": a number,
+                "min_credit_score": a number,
+                "loan_amount_limits": {{"min": a number, "max": a number}},
+                "restrictions": [],
+                "footnotes": []
+            }}""".format(
+                loan_type=criteria.get('loan_type', 'Not specified'),
+                purpose=criteria.get('purpose', 'Not specified'),
+                ltv=criteria.get('ltv', 'Not specified'),
+                credit_score=criteria.get('credit_score', 'Not specified'),
+                property_type=criteria.get('property_type', 'Not specified'),
+                loan_amount=criteria.get('loan_amount', 'Not specified'),
+                dscr_value=criteria.get('dscr_value', 'Not specified')
+            )
 
             # Run analysis
             result = agent.run(analysis_query)
