@@ -178,7 +178,20 @@ class MortgageGuidelinesAnalyzer:
 
                 # Analyze tables
                 table_results = await self.analyze_tables(structured_criteria)
-                
+                st.write("Raw table results:", table_results)  # Debug line
+                st.write("Type of results:", type(table_results))  # Debug line
+
+                if isinstance(table_results, str):
+                    # Try to parse string to JSON
+                    try:
+                        table_results = json.loads(table_results)
+                    except:
+                        table_results = {
+                            "error": "Failed to parse results",
+                            "matches": False,
+                            "confidence_score": 0
+                        }
+
                 if not table_results or table_results.get("error"):
                     return []
 
