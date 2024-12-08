@@ -116,6 +116,9 @@ class MortgageGuidelinesAnalyzer:
                 df=relevant_tables,
                 verbose=True,
                 allow_dangerous_code=True
+                max_iterations=3,  # Limit the number of operations
+                prefix="""Analyze this mortgage data in a single pass. 
+                Do not perform repeated checks. Return results immediately after first analysis."""
             )
             
             # Create the analysis query based on criteria
