@@ -8,3 +8,4 @@ openai
 boto3
 faiss-cpu
 tiktoken
+tabulate
