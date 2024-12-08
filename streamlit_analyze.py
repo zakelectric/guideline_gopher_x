@@ -275,10 +275,11 @@ class MortgageGuidelinesAnalyzer:
     async def query_guidelines(self, query: str):
         # 1. First parse query into structured criteria using ChatPromptTemplate
         structured_criteria_response = self.llm.invoke(
-            self.query_parser_prompt.format(query=query)
-        )
+        self.query_parser_prompt.format(query=query)
+    )
         structured_criteria = self._parse_llm_response(structured_criteria_response)
-        st.write("Parsed criteria:", structured_criteria)  # Debug line
+        st.write("DEBUG - Structured criteria:", structured_criteria)  # Add this line
+        st.write("DEBUG - Type of structured criteria:", type(structured_criteria))  # Add this line
 
         if not structured_criteria:
             return {"error": "Failed to parse query"}
