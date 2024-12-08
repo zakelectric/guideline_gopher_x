@@ -47,7 +47,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, openai_api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         self.llm = ChatOpenAI(
-            model_name="gpt-4o",
+            model_name="gpt-4o-mini",
             temperature=0,
             openai_api_key=openai_api_key
         )
@@ -171,11 +171,11 @@ class MortgageGuidelinesAnalyzer:
 
         # Extract relevant subset of tables
         relevant_tables = self._extract_table_subset(criteria)
-        st.write("RELEVANT TABLES", relevant_tables)
+        #st.write("RELEVANT TABLES", relevant_tables)
         
         # Convert tables data to string representation for the LLM
         table_str = relevant_tables.to_string()
-        st.write("TABLE STRING", table_str)
+        #st.write("TABLE STRING", table_str)
         
         try:
             analysis = self.llm.invoke(
