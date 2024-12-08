@@ -216,9 +216,7 @@ class MortgageGuidelinesAnalyzer:
 
     async def query_guidelines(self, query: str):
         # Parse query into structured criteria
-        structured_criteria_response = self.llm.invoke(
-            self.agent_analyzer_prompt.format(query=query)
-        )
+        structured_criteria_response = self.agent_analyzer_prompt.format(query=query)
         structured_criteria = self._parse_llm_response(structured_criteria_response)
 
         if not structured_criteria:
