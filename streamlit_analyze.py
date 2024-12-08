@@ -177,7 +177,7 @@ class MortgageGuidelinesAnalyzer:
         # Convert tables data to string representation with explicit line breaks
         table_str = relevant_tables.to_string()
         st.write("TABLE STRING:")
-        st.text(table_str)  # st.text() preserves whitespace and line breaks
+        st.code(table_str)  # st.text() preserves whitespace and line breaks
         
         try:
             analysis = self.llm.invoke(
