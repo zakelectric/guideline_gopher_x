@@ -335,17 +335,28 @@ class MortgageGuidelinesAnalyzer:
             return {"error": f"Query processing failed: {str(e)}"}
 
     def _parse_llm_response(self, response):
+        st.write("Raw LLM response:", response)  # Debug line
         try:
-            return json.loads(response.content)
-        except json.JSONDecodeError:
-            import re
-            json_match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            if json_match:
-                try:
+            if hasattr(response, 'content'):
+                content = response.content
+                st.write("Response content:", content)  # Debug line
+                return json.loads(content)
+            elif isinstance(response, str):
+                st.write("Response is string:", response)  # Debug line
+                return json.loads(response)
+            else:
+                st.write("Response is unknown type:", type(response))  # Debug line
+                return None
+        except json.JSONDecodeError as e:
+            st.write(f"JSON decode error: {e}")  # Debug line
+            try:
+                json_match = re.search(r'\{.*\}', str(response), re.DOTALL)
+                if json_match:
                     return json.loads(json_match.group(0))
-                except:
-                    return None
-            return None
+                return None
+            except Exception as e:
+                st.write(f"Regex extract error: {e}")  # Debug line
+                return None
 
 def main():
     st.title("Mortgage Guidelines Analyzer")
