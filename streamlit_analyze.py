@@ -46,6 +46,12 @@ class MortgageGuidelinesAnalyzer:
         temperature=0,
         openai_api_key=api_key
     )
+
+        self.s3_client = boto3.client('s3', 
+                                    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+                                    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"])
+        self.bucket_name = BUCKET_NAME
+
         
         # Query parser prompt stays the same
         self.query_parser_prompt = ChatPromptTemplate.from_messages([
