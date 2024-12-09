@@ -52,7 +52,16 @@ class MortgageGuidelinesAnalyzer:
                                     aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"])
         self.bucket_name = BUCKET_NAME
 
-        
+        try:
+            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='vector_stores/COIN - Cashflow Only Investor Loan Product Matrix/combined_tables.csv')
+            csv_content = csv_obj['Body'].read().decode('utf-8')
+            self.tables_data = pd.read_csv(io.StringIO(csv_content))
+            st.session_state['tables_loaded'] = True
+        except Exception as e:
+            st.error(f"Error loading tables data from S3: {e}")
+            self.tables_data = None
+            st.session_state['tables_loaded'] = False
+            
         # Query parser prompt stays the same
         self.query_parser_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
