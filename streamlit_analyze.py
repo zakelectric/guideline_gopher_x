@@ -221,6 +221,7 @@ class MortgageGuidelinesAnalyzer:
                     "confidence_score": 0}
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
+        st.write(f"Processing investor {investor_prefix} with criteria:", structured_criteria)
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Vector store loading stays the same
@@ -273,25 +274,18 @@ class MortgageGuidelinesAnalyzer:
             return []
 
     async def query_guidelines(self, query: str):
-        # 1. First parse query into structured criteria using ChatPromptTemplate
+        # Parse query into structured criteria
         structured_criteria_response = self.llm.invoke(
-        self.query_parser_prompt.format(query=query)
-    )
+            self.query_parser_prompt.format(query=query)
+        )
         structured_criteria = self._parse_llm_response(structured_criteria_response)
-        st.write("DEBUG - Structured criteria:", structured_criteria)  # Add this line
-        st.write("DEBUG - Type of structured criteria:", type(structured_criteria))  # Add this line
+        st.write("DEBUG - Structured criteria:", structured_criteria)
 
         if not structured_criteria:
             return {"error": "Failed to parse query"}
 
-        # 2. Now analyze using DataFrame agent with structured criteria
         try:
-            # Create analysis query from agent_analyzer_prompt, put it in json
-            analysis_query = self.agent_analyzer_prompt.format(
-                criteria=json.dumps(structured_criteria, indent=2)
-            )
-            
-            # Define S3 bucket
+            # List vector stores in S3
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name,
                 Prefix='vector_stores/',
@@ -301,6 +295,9 @@ class MortgageGuidelinesAnalyzer:
             if 'CommonPrefixes' not in response:
                 return {"error": "No guidelines found"}
 
+            # Debug - print first task creation
+            st.write("Creating first task with criteria:", structured_criteria)
+            
             tasks = []
             for prefix in response['CommonPrefixes']:
                 investor_prefix = prefix['Prefix']
@@ -309,7 +306,7 @@ class MortgageGuidelinesAnalyzer:
                     self.bucket_name,
                     investor_prefix,
                     query,
-                    structured_criteria  # Pass the structured criteria here
+                    structured_criteria  # This is where structured_criteria is used
                 )
                 tasks.append(task)
 
