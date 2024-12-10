@@ -218,7 +218,8 @@ class MortgageGuidelinesAnalyzer:
 
             # Run analysis
             result = st.session_state.agent.run("""Instructions:
-                - Analyze the table and match with a(n) {loan_product} loan. If you cannot find a(n) {loan_product} loan, return False.
+                - Analyze the table data and match with an area that contains the {loan_product} loan AND it's accompanying requirements, like LTV/CLTV, credit/FICO score, reserve requirements,
+                DSCR ratio, occupancy requirements, etc. You MUST find the area that at least contains the {loan_product} loan, FICO/credit score, and LTV. If you cannot find a(n) {loan_product} loan, return False.
                 - Next, insure that the FICO/credit score requirement is less than {credit_score} signifying that the borrower has a qualifying credit score.
                 - Next, insure that the LTV/CLTV requirement is higher than {ltv}
                                                 Return JSON with:
