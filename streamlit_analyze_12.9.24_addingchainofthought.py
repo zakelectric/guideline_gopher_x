@@ -101,81 +101,44 @@ class MortgageGuidelinesAnalyzer:
         }"""
 
     async def analyze_tables(self, criteria: dict):
-        """Analyze the CSV tables using the DataFrame agent with exposed reasoning"""
+        """Analyze the CSV tables using the DataFrame agent"""
         if self.tables_data is None:
             return {"error": "Tables data not available"}
 
         try:
             # Extract relevant subset
-            if 'relevant_tables' not in st.session_state:
-                st.session_state.relevant_tables = self._extract_table_subset(criteria)
-                st.write("Tables extracted:")
-                st.dataframe(st.session_state.relevant_tables)
+            relevant_tables = self._extract_table_subset(criteria)
+            st.write("Working with this table subset:")
+            st.dataframe(relevant_tables)
 
-            # Create agent with verbose output and callbacks
-            if 'agent' not in st.session_state:
-                # Add callback handler to capture intermediate steps
-                class ThoughtTracer:
-                    def on_agent_action(self, action, color="blue"):
-                        st.markdown(f"🤔 **Thinking:** {action.log}", unsafe_allow_html=True)
-                        if action.tool_input:
-                            st.markdown(f"📝 **Planning to do:** {action.tool_input}")
-                    
-                    def on_agent_finish(self, output, color="green"):
-                        st.markdown(f"✅ **Conclusion:** {output}", unsafe_allow_html=True)
+            # Create DataFrame agent
+            agent = create_pandas_dataframe_agent(
+                llm=self.llm,
+                df=relevant_tables,
+                verbose=True,
+                allow_dangerous_code=True,
+                max_iterations=5,
+                handle_parsing_errors=True,
+                prefix="You are analyzing mortgage guidelines expert working with data in tables to match the right loan product to the query. Work with the data directly."
+            )
+            
+            # Format the analysis query using our prompt and criteria
+            analysis_query = self.agent_analyzer_prompt.format(
+                loan_type=criteria.get('loan_type', 'Not specified'),
+                purpose=criteria.get('purpose', 'Not specified'),
+                ltv=criteria.get('ltv', 'Not specified'),
+                credit_score=criteria.get('credit_score', 'Not specified'),
+                property_type=criteria.get('property_type', 'Not specified'),
+                loan_amount=criteria.get('loan_amount', 'Not specified'),
+                dscr_value=criteria.get('dscr_value', 'Not specified')
+            )
+            
+            # Run the analysis
+            st.write("Running table analysis...")
+            result = agent.run(analysis_query)
+            st.write("Raw agent response:", result)
 
-                callbacks = [ThoughtTracer()]
-                
-                st.session_state.agent = create_pandas_dataframe_agent(
-                    llm=self.llm,
-                    df=st.session_state.relevant_tables,
-                    verbose=True,
-                    callbacks=callbacks,
-                    allow_dangerous_code=True,
-                    max_iterations=7,
-                    prefix="""You are analyzing mortgage guidelines data in tables to match loan products to queries.
-                    IMPORTANT: Show your reasoning step by step:
-                    1. First explain which columns you're examining and why
-                    2. Detail your filtering logic for each criterion
-                    3. Explain how you're calculating match confidence
-                    4. When making decisions, explain your thought process
-                    
-                    Work with the data directly and return your final answer as valid JSON."""
-                )
-                st.write("Agent created with thought tracing enabled")
-
-            # Create a collapsible section for the analysis process
-            with st.expander("View Analysis Process", expanded=True):
-                st.write("🔍 Starting detailed analysis...")
-                
-                # Format the analysis query with detailed instructions
-                analysis_query = f"""
-                Analyze these mortgage criteria step by step:
-                {json.dumps(criteria, indent=2)}
-                
-                1. First identify relevant columns for each criterion
-                2. Check if the loan type exists in the data
-                3. Verify credit score requirements
-                4. Check LTV limitations
-                5. Look for any additional restrictions
-                
-                Explain your reasoning at each step, then return only a JSON with:
-                {{
-                    "matches": boolean,
-                    "confidence_score": number between 0-100,
-                    "max_ltv": number,
-                    "min_credit_score": number,
-                    "loan_amount_limits": {{"min": number, "max": number}},
-                    "restrictions": [],
-                    "footnotes": []
-                }}
-                """
-                
-                # Run the analysis
-                result = st.session_state.agent.run(analysis_query)
-                st.write("📊 Analysis complete!")
-
-            # Parse and return the result
+            # Parse the result
             if isinstance(result, str):
                 try:
                     json_match = re.search(r'\{.*\}', result, re.DOTALL)
@@ -196,11 +159,6 @@ class MortgageGuidelinesAnalyzer:
             return {
                 "matches": False,
                 "confidence_score": 0,
-                "max_ltv": 0,
-                "min_credit_score": 0,
-                "loan_amount_limits": {"min": 0, "max": 0},
-                "restrictions": [f"Analysis error: {str(e)}"],
-                "footnotes": [],
                 "error": str(e)
             }
 
@@ -229,6 +187,101 @@ class MortgageGuidelinesAnalyzer:
         
         return subset
 
+    async def analyze_tables(self, criteria: dict):
+        if self.tables_data is None:
+            return {"error": "Tables data not available", "matches": False, "confidence_score": 0}
+
+        # Track how many times LLM analyzes table
+        if 'analysis_count' not in st.session_state:
+            st.session_state.analysis_count = 0
+        st.session_state.analysis_count += 1
+        st.write(f"Analysis attempt #{st.session_state.analysis_count}")
+
+        try:
+            # Extract relevant subset once
+            if 'relevant_tables' not in st.session_state:
+                st.session_state.relevant_tables = self._extract_table_subset(criteria)
+                st.write("Tables extracted:")
+                st.dataframe(st.session_state.relevant_tables)
+
+            # Create agent once
+            if 'agent' not in st.session_state:
+                st.session_state.agent = create_pandas_dataframe_agent(
+                    llm=self.llm,
+                    df=st.session_state.relevant_tables,
+                    verbose=True,
+                    allow_dangerous_code=True,
+                    max_iterations=5,  # Increased from 3
+                    prefix="IMPORTANT: Analyze mortgage data in ONE PASS. Return JSON only."
+                )
+                st.write("Agent created once")
+
+            # Run analysis
+            result = st.session_state.agent.run("""Instructions:
+                - Analyze the table data and match with an area that contains the {loan_product} loan AND it's accompanying requirements, like LTV/CLTV, credit/FICO score, reserve requirements,
+                DSCR ratio, occupancy requirements, etc. You MUST find the area that at least contains the {loan_product} loan, FICO/credit score, and LTV. If you cannot find a(n) {loan_product} loan, return False.
+                - Next, insure that the FICO/credit score requirement is less than {credit_score} signifying that the borrower has a qualifying credit score.
+                - Next, insure that the LTV/CLTV requirement is higher than {ltv}
+                                                Return JSON with:
+                {"matches": true/false, "confidence_score": 0-100, "max_ltv": number, 
+                "min_credit_score": number, "loan_amount_limits": {"min": number, "max": number},
+                "restrictions": [], "footnotes": []}""")
+
+            # Handle timeout or string result
+            if isinstance(result, str):
+                if "iteration limit" in result or "time limit" in result:
+                    st.warning("Analysis timed out. Returning default response.")
+                    return {
+                        "matches": False,
+                        "confidence_score": 0,
+                        "max_ltv": 0,
+                        "min_credit_score": 0,
+                        "loan_amount_limits": {"min": 0, "max": 0},
+                        "restrictions": ["Analysis timed out"],
+                        "footnotes": [],
+                        "error": "Analysis timeout"
+                    }
+                
+                # Try to extract JSON from string response
+                json_match = re.search(r'\{.*\}', result, re.DOTALL)
+                if json_match:
+                    try:
+                        return json.loads(json_match.group(0))
+                    except json.JSONDecodeError:
+                        st.warning("Could not parse agent response as JSON")
+                
+                # If no JSON found, return default response
+                return {
+                    "matches": False,
+                    "confidence_score": 0,
+                    "max_ltv": 0,
+                    "min_credit_score": 0,
+                    "loan_amount_limits": {"min": 0, "max": 0},
+                    "restrictions": ["Invalid response format"],
+                    "footnotes": [],
+                    "error": "Invalid response"
+                }
+            
+            return result
+
+        except Exception as e:
+            st.error(f"Error in table analysis: {e}")
+            return {
+                "matches": False,
+                "confidence_score": 0,
+                "max_ltv": 0,
+                "min_credit_score": 0,
+                "loan_amount_limits": {"min": 0, "max": 0},
+                "restrictions": [f"Analysis error: {str(e)}"],
+                "footnotes": [],
+                "error": str(e)
+            }
+
+        except Exception as e:
+            st.error(f"Error in table analysis: {e}")
+            return {"error": f"Table analysis failed: {str(e)}",
+                    "matches": False,
+                    "confidence_score": 0}
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         st.write(f"Processing investor {investor_prefix} with criteria:", structured_criteria)
