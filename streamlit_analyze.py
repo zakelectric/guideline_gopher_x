@@ -189,7 +189,7 @@ class MortgageGuidelinesAnalyzer:
     async def analyze_tables(self, criteria: dict):
         """Analyze the CSV tables using the DataFrame agent"""
         if self.tables_data is None:
-            return {"error": "Tables data not available"}
+            return {"error": "Tables data not available", "matches": False, "confidence_score": 0}
 
         if 'analysis_count' not in st.session_state:
             st.session_state.analysis_count = 0
@@ -211,23 +211,66 @@ class MortgageGuidelinesAnalyzer:
                     df=st.session_state.relevant_tables,
                     verbose=True,
                     allow_dangerous_code=True,
-                    max_iterations=3,
+                    max_iterations=5,  # Increased from 3
                     prefix="IMPORTANT: Analyze mortgage data in ONE PASS. Return JSON only."
                 )
                 st.write("Agent created once")
 
-            # Run analysis once
+            # Run analysis
             result = st.session_state.agent.run("""Return JSON with:
                 {"matches": true/false, "confidence_score": 0-100, "max_ltv": number, 
                 "min_credit_score": number, "loan_amount_limits": {"min": number, "max": number},
                 "restrictions": [], "footnotes": []}""")
 
+            # Handle timeout or string result
             if isinstance(result, str):
+                if "iteration limit" in result or "time limit" in result:
+                    st.warning("Analysis timed out. Returning default response.")
+                    return {
+                        "matches": False,
+                        "confidence_score": 0,
+                        "max_ltv": 0,
+                        "min_credit_score": 0,
+                        "loan_amount_limits": {"min": 0, "max": 0},
+                        "restrictions": ["Analysis timed out"],
+                        "footnotes": [],
+                        "error": "Analysis timeout"
+                    }
+                
+                # Try to extract JSON from string response
                 json_match = re.search(r'\{.*\}', result, re.DOTALL)
                 if json_match:
-                    return json.loads(json_match.group(0))
+                    try:
+                        return json.loads(json_match.group(0))
+                    except json.JSONDecodeError:
+                        st.warning("Could not parse agent response as JSON")
+                
+                # If no JSON found, return default response
+                return {
+                    "matches": False,
+                    "confidence_score": 0,
+                    "max_ltv": 0,
+                    "min_credit_score": 0,
+                    "loan_amount_limits": {"min": 0, "max": 0},
+                    "restrictions": ["Invalid response format"],
+                    "footnotes": [],
+                    "error": "Invalid response"
+                }
             
             return result
+
+        except Exception as e:
+            st.error(f"Error in table analysis: {e}")
+            return {
+                "matches": False,
+                "confidence_score": 0,
+                "max_ltv": 0,
+                "min_credit_score": 0,
+                "loan_amount_limits": {"min": 0, "max": 0},
+                "restrictions": [f"Analysis error: {str(e)}"],
+                "footnotes": [],
+                "error": str(e)
+            }
 
         except Exception as e:
             st.error(f"Error in table analysis: {e}")
