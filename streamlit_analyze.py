@@ -259,33 +259,42 @@ class MortgageGuidelinesAnalyzer:
                     k=5
                 )
 
-                text_content = "\n".join([chunk.page_content for chunk in relevant_chunks])
+                # Check if we have any relevant chunks before proceeding
+                if not relevant_chunks:
+                    st.write("No relevant chunks found")
+                    return []
 
+                text_content = "\n".join([chunk.page_content for chunk in relevant_chunks])
+                
                 # Analyze tables with structured criteria
                 table_results = await self.analyze_tables(structured_criteria)
                 st.write("Table analysis results:", table_results)
 
-                if not table_results or table_results.get("error"):
+                if not table_results or isinstance(table_results, str) or table_results.get("error"):
                     st.write("No matching table results found")
                     return []
 
                 # Create response if we have matches
                 if table_results.get('matches', False):
+                    # Safely get metadata from the first chunk
+                    metadata = relevant_chunks[0].metadata if relevant_chunks else {}
+                    
                     return [{
-                        "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
+                        "name of investor": metadata.get("investor", "Unknown"),
                         "confidence": table_results.get('confidence_score', 0),
                         "details": text_content,
                         "restrictions": table_results.get('restrictions', []),
                         "credit score": table_results.get('min_credit_score', 0),
                         "loan to value": table_results.get('max_ltv', 0),
                         "footnotes": table_results.get('footnotes', []),
-                        "source_url": relevant_chunks[0].metadata.get("s3_url", "")
+                        "source_url": metadata.get("s3_url", "")
                     }]
 
                 return []
 
         except Exception as e:
             st.error(f"Error processing {investor_prefix}: {str(e)}")
+            logging.error(f"Error processing {investor_prefix}: {str(e)}", exc_info=True)
             return []
 
     async def query_guidelines(self, query: str):
