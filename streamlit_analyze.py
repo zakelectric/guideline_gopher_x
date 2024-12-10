@@ -53,7 +53,7 @@ class MortgageGuidelinesAnalyzer:
         self.bucket_name = BUCKET_NAME
 
         try:
-            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='vector_stores/COIN - Cashflow Only Investor Loan Product Matrix/combined_tables.csv')
+            csv_obj = self.s3_client.get_object(Bucket=BUCKET_NAME, Key='vector_stores/Non-Delegated ITIN Activator Matrix/combined_tables.csv')
             csv_content = csv_obj['Body'].read().decode('utf-8')
             self.tables_data = pd.read_csv(io.StringIO(csv_content))
             st.session_state['tables_loaded'] = True
