@@ -108,7 +108,7 @@ class MortgageGuidelinesAnalyzer:
         try:
             # Extract relevant subset
             if 'relevant_tables' not in st.session_state:
-                st.session_state.relevant_tables = self._extract_table_subset(criteria)
+                st.session_state.relevant_tables = self.tables_data #_extract_table_subset(criteria)
                 st.write("Tables extracted:")
                 st.dataframe(st.session_state.relevant_tables)
 
