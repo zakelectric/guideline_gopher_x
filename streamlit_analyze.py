@@ -119,7 +119,7 @@ class MortgageGuidelinesAnalyzer:
                 allow_dangerous_code=True,
                 max_iterations=5,
                 handle_parsing_errors=True,
-                prefix="You are analyzing mortgage guideline tables. Work with the data directly."
+                prefix="You are analyzing mortgage guidelines expert working with data in tables to match the right loan product to the query. Work with the data directly."
             )
             
             # Format the analysis query using our prompt and criteria
@@ -188,14 +188,13 @@ class MortgageGuidelinesAnalyzer:
         return subset
 
     async def analyze_tables(self, criteria: dict):
-        """Analyze the CSV tables using the DataFrame agent"""
         if self.tables_data is None:
             return {"error": "Tables data not available", "matches": False, "confidence_score": 0}
 
+        # Track how many times LLM analyzes table
         if 'analysis_count' not in st.session_state:
             st.session_state.analysis_count = 0
         st.session_state.analysis_count += 1
-        
         st.write(f"Analysis attempt #{st.session_state.analysis_count}")
 
         try:
@@ -218,7 +217,11 @@ class MortgageGuidelinesAnalyzer:
                 st.write("Agent created once")
 
             # Run analysis
-            result = st.session_state.agent.run("""Return JSON with:
+            result = st.session_state.agent.run("""Instructions:
+                - Analyze the table and match with a(n) {loan_product} loan. If you cannot find a(n) {loan_product} loan, return False.
+                - Next, insure that the FICO/credit score requirement is less than {credit_score} signifying that the borrower has a qualifying credit score.
+                - Next, insure that the LTV/CLTV requirement is higher than {ltv}
+                                                Return JSON with:
                 {"matches": true/false, "confidence_score": 0-100, "max_ltv": number, 
                 "min_credit_score": number, "loan_amount_limits": {"min": number, "max": number},
                 "restrictions": [], "footnotes": []}""")
@@ -282,8 +285,8 @@ class MortgageGuidelinesAnalyzer:
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
         st.write(f"Processing investor {investor_prefix} with criteria:", structured_criteria)
         try:
+            # Load the vector stores
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Vector store loading stays the same
                 for ext in ['.faiss', '.pkl']:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
@@ -342,13 +345,14 @@ class MortgageGuidelinesAnalyzer:
             return []
 
     async def query_guidelines(self, query: str):
-        # Parse query into structured criteria
+        
+        # Parse query into structured criteria JSON
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
+        
+        # Clean up the JSON
         structured_criteria = self._parse_llm_response(structured_criteria_response)
-        st.write("DEBUG - Structured criteria:", structured_criteria)
-
         if not structured_criteria:
             return {"error": "Failed to parse query"}
 
@@ -359,13 +363,13 @@ class MortgageGuidelinesAnalyzer:
                 Prefix='vector_stores/',
                 Delimiter='/'
             )
-
             if 'CommonPrefixes' not in response:
                 return {"error": "No guidelines found"}
 
             # Debug - print first task creation
             st.write("Creating first task with criteria:", structured_criteria)
             
+            # Create tasks for each guideline in S3
             tasks = []
             for prefix in response['CommonPrefixes']:
                 investor_prefix = prefix['Prefix']
