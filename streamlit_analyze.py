@@ -117,7 +117,8 @@ class MortgageGuidelinesAnalyzer:
                 df=relevant_tables,
                 verbose=True,
                 allow_dangerous_code=True,
-                max_iterations=3,
+                max_iterations=5,
+                handle_parsing_errors=True,
                 prefix="You are analyzing mortgage guideline tables. Work with the data directly."
             )
             
