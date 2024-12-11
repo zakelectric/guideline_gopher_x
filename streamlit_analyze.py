@@ -80,8 +80,7 @@ class MortgageGuidelinesAnalyzer:
         ])
 
         # Modify agent analyzer prompt to be more specific
-        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria.
-        Be sure that you analyze ALL rows in the relevant area to look for matches, not just the first few rows:
+        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
         Loan Type: {loan_type}
         Purpose: {purpose}
         LTV: {ltv}
@@ -156,8 +155,8 @@ class MortgageGuidelinesAnalyzer:
                 
                 1. First identify relevant columns for each criterion
                 2. Check if the loan type exists in the data
-                3. Verify credit score requirements
-                4. Check LTV limitations
+                3. Verify credit score requirements being sure to analyze ALL rows in the relevant area for lowest minimum credit score.
+                4. Check LTV limitations being sure to analyze all rows in the relevant area for highest possible ltv.
                 5. Look for any additional restrictions
                 
                 Explain your reasoning at each step, then return only a JSON with:
