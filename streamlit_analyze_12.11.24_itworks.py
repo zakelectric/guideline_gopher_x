@@ -80,8 +80,7 @@ class MortgageGuidelinesAnalyzer:
         ])
 
         # Modify agent analyzer prompt to be more specific
-        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria.
-        Be sure that you analyze ALL rows in the relevant area to look for matches, not just the first few rows:
+        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
         Loan Type: {loan_type}
         Purpose: {purpose}
         LTV: {ltv}
