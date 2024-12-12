@@ -140,6 +140,7 @@ class MortgageGuidelinesAnalyzer:
                     3. Explain how you're calculating match confidence
                     4. When making decisions, explain your thought process
                     
+                    Be sure to scan ALL of the rows in each relevant column for the minimum and maximum values possible.
                     Work with the data directly and return your final answer as valid JSON."""
                 )
                 st.write("Agent created with thought tracing enabled")
@@ -155,8 +156,8 @@ class MortgageGuidelinesAnalyzer:
                 
                 1. First identify relevant columns for each criterion
                 2. Check if the loan type exists in the data
-                3. Verify credit score requirements being sure to analyze ALL rows in the relevant area for lowest minimum credit score.
-                4. Check LTV limitations being sure to analyze all rows in the relevant area for highest possible ltv.
+                3. Verify credit score requirements being sure to analyze ALL rows in the relevant column for lowest possible minimum credit score.
+                4. Check LTV limitations being sure to analyze all rows in the relevant column for highest possible ltv.
                 5. Look for any additional restrictions
                 
                 Explain your reasoning at each step, then return only a JSON with:
