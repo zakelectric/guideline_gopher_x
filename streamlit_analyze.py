@@ -13,6 +13,7 @@ from langchain.chains import RetrievalQA
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_experimental.agents import create_pandas_dataframe_agent
+from langchain.agents import create_csv_agent
 import json
 import boto3
 from botocore.exceptions import NoCredentialsError
@@ -104,14 +105,10 @@ class MortgageGuidelinesAnalyzer:
 
                 callbacks = [ThoughtTracer()]
                 
-                st.session_state.agent = create_pandas_dataframe_agent(
+                st.session_state.agent = create_csv_agent(
                     llm=self.llm,
-                    df=st.session_state.relevant_tables,
+                    path=st.session_state.relevant_tables,
                     verbose=True,
-                    callbacks=callbacks,
-                    allow_dangerous_code=True,
-                    max_iterations=7,
-                    handle_parsing_errors=True,
                     prefix = f"""
                         Given the loan type in the query, find all requirements that apply specifically to this program.
 
