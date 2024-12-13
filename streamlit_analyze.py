@@ -111,8 +111,10 @@ class MortgageGuidelinesAnalyzer:
                     callbacks=callbacks,
                     allow_dangerous_code=True,
                     max_iterations=7,
+                    handle_parsing_errors=True,
                     prefix="""You are analyzing mortgage guidelines data in tables to match loan products to queries.
                             IMPORTANT: Before making ANY decisions, you must:
+                            1. Find the relevant section that matches the loan type in the query
                             1. Look at EVERY row in relevant columns
                             2. Find the FULL range of possible values (minimum to maximum)
                             3. Only then decide if criteria are met
