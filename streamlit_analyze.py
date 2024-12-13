@@ -63,42 +63,42 @@ class MortgageGuidelinesAnalyzer:
             st.session_state['tables_loaded'] = False
             
         # Query parser prompt stays the same
-        self.query_parser_prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
-            into a structured format. Consider all possible ways these criteria might be expressed.
+        # self.query_parser_prompt = ChatPromptTemplate.from_messages([
+        #     ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
+        #     into a structured format. Consider all possible ways these criteria might be expressed.
 
-            Return a VALID JSON object with these fields:
-            - loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.)
-            - purpose (Purchase, Refinance, Cash-out Refi, etc.)
-            - ltv (numerical value or null)
-            - credit_score (numerical value or null)
-            - property_type (SFR, Multi-family, etc.)
-            - loan_amount (numerical value or null)
-            - dscr_value (numerical value or null, only for DSCR loans)
-            - additional_criteria (array of other important factors)"""),
-            ("human", "{query}")
-        ])
+        #     Return a VALID JSON object with these fields:
+        #     - loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.)
+        #     - purpose (Purchase, Refinance, Cash-out Refi, etc.)
+        #     - ltv (numerical value or null)
+        #     - credit_score (numerical value or null)
+        #     - property_type (SFR, Multi-family, etc.)
+        #     - loan_amount (numerical value or null)
+        #     - dscr_value (numerical value or null, only for DSCR loans)
+        #     - additional_criteria (array of other important factors)"""),
+        #     ("human", "{query}")
+        # ])
 
-        # Modify agent analyzer prompt to be more specific
-        self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
-        Loan Type: {loan_type}
-        Purpose: {purpose}
-        LTV: {ltv}
-        Credit Score: {credit_score}
-        Property Type: {property_type}
-        Loan Amount: {loan_amount}
-        DSCR Value: {dscr_value}
+        # # Modify agent analyzer prompt to be more specific
+        # self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
+        # Loan Type: {loan_type}
+        # Purpose: {purpose}
+        # LTV: {ltv}
+        # Credit Score: {credit_score}
+        # Property Type: {property_type}
+        # Loan Amount: {loan_amount}
+        # DSCR Value: {dscr_value}
         
-        Return only a JSON object with these exact fields:
-        {
-            "matches": boolean,
-            "confidence_score": number between 0-100,
-            "max_ltv": number,
-            "min_credit_score": number,
-            "loan_amount_limits": {"min": number, "max": number},
-            "restrictions": [],
-            "footnotes": []
-        }"""
+        # Return only a JSON object with these exact fields:
+        # {
+        #     "matches": boolean,
+        #     "confidence_score": number between 0-100,
+        #     "max_ltv": number,
+        #     "min_credit_score": number,
+        #     "loan_amount_limits": {"min": number, "max": number},
+        #     "restrictions": [],
+        #     "footnotes": []
+        # }"""
 
     async def analyze_tables(self, criteria: dict):
         """Analyze the CSV tables using the DataFrame agent with exposed reasoning"""
@@ -139,8 +139,9 @@ class MortgageGuidelinesAnalyzer:
                     2. Detail your filtering logic for each criterion
                     3. Explain how you're calculating match confidence
                     4. When making decisions, explain your thought process
-                    
-                    Be sure to scan ALL of the rows in each relevant column for the minimum and maximum values possible.
+                    5. Be sure to scan ALL of the rows in each relevant column for the minimum and maximum values possible.
+                    6. Make your decisions based off minimum and maximum values.
+
                     Work with the data directly and return your final answer as valid JSON."""
                 )
                 st.write("Agent created with thought tracing enabled")
