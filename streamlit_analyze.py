@@ -130,7 +130,7 @@ class MortgageGuidelinesAnalyzer:
                 # The analysis query is separate from the agent creation
                 analysis_query = f"""For loan type: {structured_criteria['loan_type']}
 
-                Find and return only this JSON:
+                Find and return only this JSON. Look at ALL relevant rows, NOT JUST THE FIRST ONE. Return results based on combination of factors in query:
                 {{
                     "min_credit_score": [minimum FICO found],
                     "max_ltv": [highest LTV found],
