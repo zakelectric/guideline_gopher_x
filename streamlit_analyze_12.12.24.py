@@ -87,12 +87,13 @@ class MortgageGuidelinesAnalyzer:
         try:
             # Extract relevant subset
             if 'relevant_tables' not in st.session_state:
-                st.session_state.relevant_tables = self.tables_data
+                st.session_state.relevant_tables = self.tables_data #_extract_table_subset(criteria)
                 st.write("Tables extracted:")
                 st.dataframe(st.session_state.relevant_tables)
 
             # Create agent with verbose output and callbacks
             if 'agent' not in st.session_state:
+                # Add callback handler to capture intermediate steps
                 class ThoughtTracer:
                     def on_agent_action(self, action, color="blue"):
                         st.markdown(f"🤔 **Thinking:** {action.log}", unsafe_allow_html=True)
@@ -112,54 +113,34 @@ class MortgageGuidelinesAnalyzer:
                     allow_dangerous_code=True,
                     max_iterations=7,
                     prefix="""You are analyzing mortgage guidelines data in tables to match loan products to queries.
-                    CRITICAL: You must analyze EVERY row in the relevant columns, not just the first matches you find.
+                    IMPORTANT: Show your reasoning step by step:
+                    1. First explain which columns you're examining and why
+                    2. Detail your filtering logic for each criterion
+                    3. Explain how you're calculating match confidence
+                    4. When making decisions, explain your thought process
+                    5. Be sure to scan ALL of the rows in each relevant column for the minimum and maximum values possible.
+                    6. Make your decisions based off minimum and maximum values.
                     
-                    Follow these steps precisely for EACH criterion:
-                    1. For each relevant column:
-                    - Use df.column_name.unique() to get all unique values
-                    - Use df.column_name.min() and df.column_name.max() for numeric columns
-                    - Print the full range of values found
-                    
-                    2. For credit scores:
-                    - Find the LOWEST acceptable score across ALL rows
-                    - Use: min_score = df['credit_score_column'].min()
-                    
-                    3. For LTV limits:
-                    - Find the HIGHEST possible LTV across ALL rows
-                    - Use: max_ltv = df['ltv_column'].max()
-                    
-                    4. For loan amounts:
-                    - Find both minimum and maximum across ALL rows
-                    - Use: 
-                        min_amount = df['loan_amount_column'].min()
-                        max_amount = df['loan_amount_column'].max()
-                    
-                    5. For each criterion checked:
-                    - Print total number of rows examined
-                    - Print range of values found
-                    - Explain if any rows were excluded and why
-                    
-                    Work with the data directly and return your final answer as valid JSON.
-                    Include a 'data_coverage' field showing number of rows analyzed for each criterion."""
+                    Work with the data directly and return your final answer as valid JSON."""
                 )
-                st.write("Agent created with comprehensive analysis enabled")
+                st.write("Agent created with thought tracing enabled")
 
+            # Create a collapsible section for the analysis process
             with st.expander("View Analysis Process", expanded=True):
                 st.write("🔍 Starting detailed analysis...")
                 
+                # Format the analysis query with detailed instructions
                 analysis_query = f"""
-                Analyze these mortgage criteria exhaustively across ALL rows:
+                Analyze these mortgage criteria step by step:
                 {json.dumps(structured_criteria, indent=2)}
                 
-                1. Start by counting total rows in dataset
-                2. For each criterion:
-                - Print number of rows analyzed
-                - Show full range of values found
-                - Note any null or invalid values
-                3. Use df.describe() for numeric columns to see full distribution
-                4. Check for any conflicting criteria across rows
+                1. First identify relevant columns for each criterion
+                2. Check if the loan type exists in the data
+                3. Verify credit score requirements being sure to analyze ALL rows in the relevant column for lowest possible minimum credit score.
+                4. Check LTV limitations being sure to analyze all rows in the relevant column for highest possible ltv.
+                5. Look for any additional restrictions
                 
-                Return a JSON with:
+                Explain your reasoning at each step, then return only a JSON with:
                 {{
                     "matches": boolean,
                     "confidence_score": number between 0-100,
@@ -167,21 +148,15 @@ class MortgageGuidelinesAnalyzer:
                     "min_credit_score": number,
                     "loan_amount_limits": {{"min": number, "max": number}},
                     "restrictions": [],
-                    "footnotes": [],
-                    "data_coverage": {{
-                        "total_rows": number,
-                        "rows_analyzed_per_criterion": {{
-                            "credit_score": number,
-                            "ltv": number,
-                            "loan_amount": number
-                        }}
-                    }}
+                    "footnotes": []
                 }}
                 """
                 
+                # Run the analysis
                 result = st.session_state.agent.run(analysis_query)
                 st.write("📊 Analysis complete!")
 
+            # Parse and return the result
             if isinstance(result, str):
                 try:
                     json_match = re.search(r'\{.*\}', result, re.DOTALL)
@@ -196,8 +171,19 @@ class MortgageGuidelinesAnalyzer:
                     }
 
             return result
+
         except Exception as e:
-            return {"error": f"Analysis failed: {str(e)}"}
+            st.error(f"Error in table analysis: {e}")
+            return {
+                "matches": False,
+                "confidence_score": 0,
+                "max_ltv": 0,
+                "min_credit_score": 0,
+                "loan_amount_limits": {"min": 0, "max": 0},
+                "restrictions": [f"Analysis error: {str(e)}"],
+                "footnotes": [],
+                "error": str(e)
+            }
 
 
     def _extract_table_subset(self, criteria: dict) -> pd.DataFrame:
