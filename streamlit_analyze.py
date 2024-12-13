@@ -116,79 +116,26 @@ class MortgageGuidelinesAnalyzer:
                     path=csv_buffer,
                     verbose=True,
                     allow_dangerous_code=True,
-                    prefix = f"""
-                        Given the loan type in the query, find all requirements that apply specifically to this program.
+                    prefix = """You are analyzing mortgage guidelines data.
+                    Read the data and answer questions directly about specific loan programs.
+                    Do not explain your process or write code.
+                    Return ONLY the values found, formatted as JSON."""
 
-                        First confirm you found the correct program section in the data.
-                        Then simply READ (don't try to code) and list:
+                    # Then make the analysis query match that style
+                    analysis_query = f"""For loan type: {structured_criteria['loan_type']}
 
-                        1. Minimum FICO requirements that apply to this program
-                        2. Maximum LTV limits that apply to this program
-                        3. All loan amount ranges that apply to this program
-
-                        Only look at rows relevant to this specific program - don't mix in requirements from other programs. Just read and tell me what you find.
-
-                        print("Columns in dataset:")
-                        print(df.columns.tolist())
-
-                        print("\nAll rows containing 'LTV':")
-                        print(df[df.apply(lambda x: x.astype(str).str.contains('LTV', case=False, na=False)).any(axis=1)])
-                        """
-                                        )
-                st.write("Agent created with comprehensive analysis enabled")
-
-            with st.expander("View Analysis Process", expanded=True):
-                st.write("🔍 Starting detailed analysis...")
-                
-                analysis_query = f"""
-                Analyze these mortgage criteria exhaustively across ALL rows:
-                {json.dumps(structured_criteria, indent=2)}
-                
-                1. Start by counting total rows in dataset
-                2. For each criterion:
-                - Print number of rows analyzed
-                - Show full range of values found
-                - Note any null or invalid values
-                3. Use df.describe() for numeric columns to see full distribution
-                4. Check for any conflicting criteria across rows
-                
-                Return a JSON with:
-                {{
-                    "matches": boolean,
-                    "confidence_score": number between 0-100,
-                    "max_ltv": number,
-                    "min_credit_score": number,
-                    "loan_amount_limits": {{"min": number, "max": number}},
-                    "restrictions": [],
-                    "footnotes": [],
-                    "data_coverage": {{
-                        "total_rows": number,
-                        "rows_analyzed_per_criterion": {{
-                            "credit_score": number,
-                            "ltv": number,
-                            "loan_amount": number
+                    Find and return only this JSON:
+                    {{
+                        "min_credit_score": [minimum FICO found],
+                        "max_ltv": [highest LTV found],
+                        "loan_amounts": {{
+                            "min": [minimum amount],
+                            "max": [maximum amount]
                         }}
-                    }}
-                }}
-                """
-                
-                result = st.session_state.agent.run(analysis_query)
-                st.write("📊 Analysis complete!")
+                    }}"""
+                )
 
-            if isinstance(result, str):
-                try:
-                    json_match = re.search(r'\{.*\}', result, re.DOTALL)
-                    if json_match:
-                        return json.loads(json_match.group(0))
-                except Exception as e:
-                    st.write(f"Error parsing agent response: {e}")
-                    return {
-                        "matches": False,
-                        "confidence_score": 0,
-                        "error": "Failed to parse agent response"
-                    }
 
-            return result
         except Exception as e:
             return {"error": f"Analysis failed: {str(e)}"}
 
