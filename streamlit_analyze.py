@@ -112,19 +112,15 @@ class MortgageGuidelinesAnalyzer:
                     allow_dangerous_code=True,
                     max_iterations=7,
                     handle_parsing_errors=True,
-                    prefix="""You are analyzing mortgage guidelines data in tables to match loan products to queries.
-                            IMPORTANT: Before making ANY decisions, you must:
-                            1. Find the relevant section that matches the loan type in the query
-                            1. Look at EVERY row in relevant columns
-                            2. Find the FULL range of possible values (minimum to maximum)
-                            3. Only then decide if criteria are met
+                    prefix="""
+                    For the specific loan product being analyzed:
+                    1. Find all FICO requirements in its section
+                    2. Find all LTV limits in its section
+                    3. Find all loan amount ranges in its section
 
-                            For example:
-                            - If checking credit scores, find the LOWEST minimum score across ALL rows
-                            - If checking LTV, find the HIGHEST maximum LTV across ALL rows
-                            - Report the full ranges you found in your explanation
+                    Make sure you only look at rows that apply to THIS specific loan product, not other products in the table.
 
-                            Return your final answer as valid JSON."""
+                    Just give me the ranges you find within this product's guidelines."""
                 )
                 st.write("Agent created with comprehensive analysis enabled")
 
