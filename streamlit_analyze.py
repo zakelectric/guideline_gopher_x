@@ -126,7 +126,14 @@ class MortgageGuidelinesAnalyzer:
                         2. Maximum LTV limits that apply to this program
                         3. All loan amount ranges that apply to this program
 
-                        Only look at rows relevant to this specific program - don't mix in requirements from other programs. Just read and tell me what you find."""
+                        Only look at rows relevant to this specific program - don't mix in requirements from other programs. Just read and tell me what you find.
+
+                        print("Columns in dataset:")
+                        print(df.columns.tolist())
+
+                        print("\nAll rows containing 'LTV':")
+                        print(df[df.apply(lambda x: x.astype(str).str.contains('LTV', case=False, na=False)).any(axis=1)])
+                        """
                                         )
                 st.write("Agent created with comprehensive analysis enabled")
 
