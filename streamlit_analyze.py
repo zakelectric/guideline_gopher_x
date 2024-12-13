@@ -22,6 +22,8 @@ import pandas as pd
 import tempfile
 import asyncio
 import datetime
+from io import StringIO
+
 
 #################### CONFIGURATION ####################
 
@@ -104,10 +106,14 @@ class MortgageGuidelinesAnalyzer:
                         st.markdown(f"✅ **Conclusion:** {output}", unsafe_allow_html=True)
 
                 callbacks = [ThoughtTracer()]
+
+                csv_buffer = StringIO()
+                st.session_state.relevant_tables.to_csv(csv_buffer, index=False)
+                csv_buffer.seek(0)
                 
                 st.session_state.agent = create_csv_agent(
                     llm=self.llm,
-                    path=st.session_state.relevant_tables,
+                    path=csv_buffer,
                     verbose=True,
                     prefix = f"""
                         Given the loan type in the query, find all requirements that apply specifically to this program.
