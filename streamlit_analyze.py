@@ -112,16 +112,18 @@ class MortgageGuidelinesAnalyzer:
                     allow_dangerous_code=True,
                     max_iterations=7,
                     handle_parsing_errors=True,
-                    prefix="""
-                    For the specific loan product being analyzed:
-                    1. Find all FICO requirements in its section
-                    2. Find all LTV limits in its section
-                    3. Find all loan amount ranges in its section
+                    prefix = f"""
+                        Given the loan type in the query, find all requirements that apply specifically to this program.
 
-                    Make sure you only look at rows that apply to THIS specific loan product, not other products in the table.
+                        First confirm you found the correct program section in the data.
+                        Then simply READ (don't try to code) and list:
 
-                    Just give me the ranges you find within this product's guidelines."""
-                )
+                        1. Minimum FICO requirements that apply to this program
+                        2. Maximum LTV limits that apply to this program
+                        3. All loan amount ranges that apply to this program
+
+                        Only look at rows relevant to this specific program - don't mix in requirements from other programs. Just read and tell me what you find."""
+                                        )
                 st.write("Agent created with comprehensive analysis enabled")
 
             with st.expander("View Analysis Process", expanded=True):
