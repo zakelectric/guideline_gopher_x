@@ -115,6 +115,7 @@ class MortgageGuidelinesAnalyzer:
                     llm=self.llm,
                     path=csv_buffer,
                     verbose=True,
+                    allow_dangerous_code=True,
                     prefix = f"""
                         Given the loan type in the query, find all requirements that apply specifically to this program.
 
