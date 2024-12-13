@@ -63,21 +63,21 @@ class MortgageGuidelinesAnalyzer:
             st.session_state['tables_loaded'] = False
             
         # Query parser prompt stays the same
-        # self.query_parser_prompt = ChatPromptTemplate.from_messages([
-        #     ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
-        #     into a structured format. Consider all possible ways these criteria might be expressed.
+        self.query_parser_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are a mortgage guidelines expert. Extract key loan criteria from queries 
+            into a structured format. Consider all possible ways these criteria might be expressed.
 
-        #     Return a VALID JSON object with these fields:
-        #     - loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.)
-        #     - purpose (Purchase, Refinance, Cash-out Refi, etc.)
-        #     - ltv (numerical value or null)
-        #     - credit_score (numerical value or null)
-        #     - property_type (SFR, Multi-family, etc.)
-        #     - loan_amount (numerical value or null)
-        #     - dscr_value (numerical value or null, only for DSCR loans)
-        #     - additional_criteria (array of other important factors)"""),
-        #     ("human", "{query}")
-        # ])
+            Return a VALID JSON object with these fields:
+            - loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.)
+            - purpose (Purchase, Refinance, Cash-out Refi, etc.)
+            - ltv (numerical value or null)
+            - credit_score (numerical value or null)
+            - property_type (SFR, Multi-family, etc.)
+            - loan_amount (numerical value or null)
+            - dscr_value (numerical value or null, only for DSCR loans)
+            - additional_criteria (array of other important factors)"""),
+            ("human", "{query}")
+        ])
 
         # # Modify agent analyzer prompt to be more specific
         # self.agent_analyzer_prompt = """Using the table data, analyze these mortgage criteria:
@@ -141,7 +141,7 @@ class MortgageGuidelinesAnalyzer:
                     4. When making decisions, explain your thought process
                     5. Be sure to scan ALL of the rows in each relevant column for the minimum and maximum values possible.
                     6. Make your decisions based off minimum and maximum values.
-
+                    
                     Work with the data directly and return your final answer as valid JSON."""
                 )
                 st.write("Agent created with thought tracing enabled")
