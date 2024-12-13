@@ -116,26 +116,46 @@ class MortgageGuidelinesAnalyzer:
                     path=csv_buffer,
                     verbose=True,
                     allow_dangerous_code=True,
-                    prefix = """You are analyzing mortgage guidelines data.
+                    prefix="""You are analyzing mortgage guidelines data.
                     Read the data and answer questions directly about specific loan programs.
                     Do not explain your process or write code.
                     Return ONLY the values found, formatted as JSON."""
-
-                    # Then make the analysis query match that style
-                    analysis_query = f"""For loan type: {structured_criteria['loan_type']}
-
-                    Find and return only this JSON:
-                    {{
-                        "min_credit_score": [minimum FICO found],
-                        "max_ltv": [highest LTV found],
-                        "loan_amounts": {{
-                            "min": [minimum amount],
-                            "max": [maximum amount]
-                        }}
-                    }}"""
                 )
+                st.write("Agent created with comprehensive analysis enabled")
 
+            with st.expander("View Analysis Process", expanded=True):
+                st.write("🔍 Starting detailed analysis...")
+                
+                # The analysis query is separate from the agent creation
+                analysis_query = f"""For loan type: {structured_criteria['loan_type']}
 
+                Find and return only this JSON:
+                {{
+                    "min_credit_score": [minimum FICO found],
+                    "max_ltv": [highest LTV found],
+                    "loan_amounts": {{
+                        "min": [minimum amount],
+                        "max": [maximum amount]
+                    }}
+                }}"""
+                
+                result = st.session_state.agent.run(analysis_query)
+                st.write("📊 Analysis complete!")
+
+            if isinstance(result, str):
+                try:
+                    json_match = re.search(r'\{.*\}', result, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group(0))
+                except Exception as e:
+                    st.write(f"Error parsing agent response: {e}")
+                    return {
+                        "matches": False,
+                        "confidence_score": 0,
+                        "error": "Failed to parse agent response"
+                    }
+
+            return result
         except Exception as e:
             return {"error": f"Analysis failed: {str(e)}"}
 
