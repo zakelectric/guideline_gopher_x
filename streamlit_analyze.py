@@ -112,35 +112,17 @@ class MortgageGuidelinesAnalyzer:
                     allow_dangerous_code=True,
                     max_iterations=7,
                     prefix="""You are analyzing mortgage guidelines data in tables to match loan products to queries.
-                    CRITICAL: You must analyze EVERY row in the relevant columns, not just the first matches you find.
-                    
-                    Follow these steps precisely for EACH criterion:
-                    1. For each relevant column:
-                    - Use df.column_name.unique() to get all unique values
-                    - Use df.column_name.min() and df.column_name.max() for numeric columns
-                    - Print the full range of values found
-                    
-                    2. For credit scores:
-                    - Find the LOWEST acceptable score across ALL rows
-                    - Use: min_score = df['credit_score_column'].min()
-                    
-                    3. For LTV limits:
-                    - Find the HIGHEST possible LTV across ALL rows
-                    - Use: max_ltv = df['ltv_column'].max()
-                    
-                    4. For loan amounts:
-                    - Find both minimum and maximum across ALL rows
-                    - Use: 
-                        min_amount = df['loan_amount_column'].min()
-                        max_amount = df['loan_amount_column'].max()
-                    
-                    5. For each criterion checked:
-                    - Print total number of rows examined
-                    - Print range of values found
-                    - Explain if any rows were excluded and why
-                    
-                    Work with the data directly and return your final answer as valid JSON.
-                    Include a 'data_coverage' field showing number of rows analyzed for each criterion."""
+                            IMPORTANT: Before making ANY decisions, you must:
+                            1. Look at EVERY row in relevant columns
+                            2. Find the FULL range of possible values (minimum to maximum)
+                            3. Only then decide if criteria are met
+
+                            For example:
+                            - If checking credit scores, find the LOWEST minimum score across ALL rows
+                            - If checking LTV, find the HIGHEST maximum LTV across ALL rows
+                            - Report the full ranges you found in your explanation
+
+                            Return your final answer as valid JSON."""
                 )
                 st.write("Agent created with comprehensive analysis enabled")
 
