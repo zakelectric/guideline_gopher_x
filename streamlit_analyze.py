@@ -116,6 +116,7 @@ class MortgageGuidelinesAnalyzer:
                     path=csv_buffer,
                     verbose=True,
                     allow_dangerous_code=True,
+                    handle_parsing_errors=True,
                     prefix="""You are analyzing mortgage guidelines data.
                     Read the data and answer questions directly about specific loan programs.
                     Start at the bottom row of the relevant section and iterate UP to find minimum credit scores and maximum ltv.
@@ -130,7 +131,9 @@ class MortgageGuidelinesAnalyzer:
                 # The analysis query is separate from the agent creation
                 analysis_query = f"""For loan type: {structured_criteria['loan_type']}
 
-                Find and return only this JSON. Look at ALL relevant rows, NOT JUST THE FIRST ONE. Return results based on combination of factors in query:
+                Find a minimum credit score that is less than {structured_criteria['credit_score']}
+                Find a maximum ltv that is higher than {structured_criteria['ltv']}
+                Find and return only this JSON:
                 {{
                     "min_credit_score": [minimum FICO found],
                     "max_ltv": [highest LTV found],
