@@ -118,6 +118,7 @@ class MortgageGuidelinesAnalyzer:
                     allow_dangerous_code=True,
                     prefix="""You are analyzing mortgage guidelines data.
                     Read the data and answer questions directly about specific loan programs.
+                    Start at the bottom row of the relevant section to find minimum credit scores and maximum ltv.
                     Do not explain your process or write code.
                     Return ONLY the values found, formatted as JSON."""
                 )
