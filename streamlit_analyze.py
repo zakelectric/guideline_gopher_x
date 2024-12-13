@@ -13,7 +13,7 @@ from langchain.chains import RetrievalQA
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain_experimental.agents.create_csv_agent
+from langchain_experimental.agents import create_csv_agent
 import json
 import boto3
 from botocore.exceptions import NoCredentialsError
