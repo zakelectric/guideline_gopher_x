@@ -130,17 +130,38 @@ class MortgageGuidelinesAnalyzer:
                 relevant_chunks = await asyncio.to_thread(
                     self.vector_store.similarity_search,
                     query,
-                    k=5
+                    k=10
                 )
-                st.write("RELEVANT CHUNKS:", relevant_chunks)
-                # Check if we have any relevant chunks before proceeding
-                if not relevant_chunks:
-                    st.write("No relevant chunks found")
-                    return []
 
-                text_content = "\n".join([chunk.page_content for chunk in relevant_chunks])
+                # Second pass: Use LLM to analyze each chunk thoroughly
+                results = []
+                for chunk in relevant_chunks:
+                    analysis_response = self.llm.invoke(
+                        self.guidelines_analyzer_prompt.format(
+                            criteria=json.dumps(structured_criteria),
+                            content=chunk.page_content
+                        )
+                    )
+                    
+                    analysis = self._parse_llm_response(analysis_response)
+                    
+                    if analysis and analysis.get('matches', False):
+                        results.append({
+                            "investor": chunk.metadata.get("investor", "Unknown"),
+                            "confidence": analysis.get('confidence_score', 0),
+                            "details": analysis.get('relevant_details', ''),
+                            "restrictions": analysis.get('restrictions', []),
+                            "source_content": chunk.page_content
+                        })
                 
-                return []
+                # Aggregate and deduplicate results by investor
+                final_results = self._aggregate_results(results)
+                
+                return {
+                    "query_understanding": structured_criteria,
+                    "matching_investors": final_results,
+                    "total_matches": len(final_results)
+                }
 
         except Exception as e:
             st.error(f"Error processing {investor_prefix}: {str(e)}")
