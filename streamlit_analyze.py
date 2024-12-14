@@ -138,7 +138,8 @@ class MortgageGuidelinesAnalyzer:
                 results = []
                 for chunk in relevant_chunks:
                     st.write("Starting chunk processing")
-                
+                    st.write("STRUCTURED CRITERIA:", structured_criteria)
+                    st.write("CHUNK PAGE CONTENT:", chunk.page_content)
                     # Step 1: Format the messages
                     messages = await self.guidelines_analyzer_prompt.format_messages(
                         criteria=json.dumps(structured_criteria),
