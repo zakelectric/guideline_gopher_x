@@ -173,6 +173,8 @@ class MortgageGuidelinesAnalyzer:
         return unique_results
 
     async def query_guidelines(self, query: str):
+
+        st.write("QUERY:", query)
         
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
