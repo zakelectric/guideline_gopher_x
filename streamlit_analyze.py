@@ -118,7 +118,7 @@ class MortgageGuidelinesAnalyzer:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     await asyncio.to_thread(s3_client.download_file, bucket, file_key, local_path)
-
+                    
                 self.vector_store = await asyncio.to_thread(
                     FAISS.load_local, 
                     temp_dir, 
@@ -132,7 +132,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=5
                 )
-
+                st.write("RELEVANT CHUNKS:", relevant_chunks)
                 # Check if we have any relevant chunks before proceeding
                 if not relevant_chunks:
                     st.write("No relevant chunks found")
@@ -234,13 +234,6 @@ def main():
     # Initialize session state
     if 'analyzer' not in st.session_state:
         st.session_state.analyzer = MortgageGuidelinesAnalyzer(api_key)
-    
-    # Show table loading status
-    if 'tables_loaded' in st.session_state:
-        if st.session_state['tables_loaded']:
-            st.success("Tables data loaded successfully")
-        else:
-            st.error("Error loading tables data")
     
     # Query input
     query = st.text_area("Enter your query:")
