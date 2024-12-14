@@ -161,8 +161,6 @@ class MortgageGuidelinesAnalyzer:
                 except Exception as e:
                     st.error(f"Error in final analysis: {e}")
                     return []
-
-                return []
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
