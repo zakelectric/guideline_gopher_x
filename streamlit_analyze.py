@@ -131,20 +131,21 @@ class MortgageGuidelinesAnalyzer:
                 relevant_chunks = await asyncio.to_thread(
                     self.vector_store.similarity_search,
                     query,
-                    k=10
+                    k=5
                 )
 
                 # Second pass: Use LLM to analyze each chunk thoroughly
                 results = []
                 for chunk in relevant_chunks:
-                    analysis_response = self.llm.invoke(
+                    analysis_response = await self.llm.invoke(
                         self.guidelines_analyzer_prompt.format(
                             criteria=json.dumps(structured_criteria),
                             content=chunk.page_content
                         )
                     )
                     
-                    analysis = await asyncio.tothread(self._parse_llm_response, analysis_response)
+                    
+                    analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response)
                     
                     if analysis and analysis.get('matches', False):
                         results.append({
@@ -156,7 +157,7 @@ class MortgageGuidelinesAnalyzer:
                         })
                 
                 # Aggregate and deduplicate results by investor
-                final_results = await asyncio.tothread(self._aggregate_results, results)
+                final_results = await asyncio.to_thread(self._aggregate_results, results)
                 
                 return {
                     "query_understanding": structured_criteria,
@@ -167,7 +168,7 @@ class MortgageGuidelinesAnalyzer:
         except Exception as e:
             st.error(f"Error processing {investor_prefix}: {str(e)}")
             logging.error(f"Error processing {investor_prefix}: {str(e)}", exc_info=True)
-            return []
+            return {}
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
