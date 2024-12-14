@@ -23,6 +23,7 @@ import tempfile
 import asyncio
 import datetime
 from io import StringIO
+from typing import List, Dict
 
 
 #################### CONFIGURATION ####################
@@ -167,6 +168,17 @@ class MortgageGuidelinesAnalyzer:
             st.error(f"Error processing {investor_prefix}: {str(e)}")
             logging.error(f"Error processing {investor_prefix}: {str(e)}", exc_info=True)
             return []
+        
+    def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
+        """Aggregate and deduplicate results by investor."""
+        # Simple implementation - keep unique investors
+        seen_investors = set()
+        unique_results = []
+        for result in results:
+            if result['investor'] not in seen_investors:
+                seen_investors.add(result['investor'])
+                unique_results.append(result)
+        return unique_results
 
     async def query_guidelines(self, query: str):
         
