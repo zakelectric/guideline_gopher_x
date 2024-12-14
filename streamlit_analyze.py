@@ -144,7 +144,10 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                     
-                    
+                    # Convert the response to string if it's not already
+                    if hasattr(analysis_response, 'content'):
+                        analysis_response = analysis_response.content
+                
                     analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response)
                     
                     if analysis and analysis.get('matches', False):
