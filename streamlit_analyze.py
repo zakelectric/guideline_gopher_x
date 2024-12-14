@@ -46,7 +46,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.llm = ChatOpenAI(
-        model_name="gpt-4o",
+        model_name="gpt-4o-mini",
         temperature=0,
         openai_api_key=api_key
     )
@@ -133,7 +133,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=5
                 )
-                st.write("RELEVANT CHUNKS:", relevant_chunks)
+
                 # Second pass: Use LLM to analyze each chunk thoroughly
                 results = []
                 for chunk in relevant_chunks:
@@ -144,6 +144,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                     st.write("ANALYSIS RESPONSE:", analysis_response.content)
+
                     # Convert the response to string if it's not already
                     if hasattr(analysis_response, 'content'):
                         analysis_response = analysis_response.content

@@ -210,7 +210,7 @@ class MortgageGuidelinesAnalyzer:
         results = []
         for chunk in relevant_chunks:
             analysis_response = self.llm.invoke(
-                self.guidelines_analyzer_prompt.format(
+                self.guidelines_analyzer_prompt.format_messages(
                     criteria=json.dumps(structured_criteria),
                     content=chunk.page_content
                 )
