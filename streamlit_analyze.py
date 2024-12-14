@@ -135,7 +135,6 @@ class MortgageGuidelinesAnalyzer:
                 )
 
                 # Second pass: Use LLM to analyze each chunk thoroughly
-                structured_criteria = await structured_criteria
                 results = []
                 for chunk in relevant_chunks:
                     st.write("Starting chunk processing")
@@ -185,12 +184,12 @@ class MortgageGuidelinesAnalyzer:
     async def query_guidelines(self, query: str):
         
         # Parse query into structured criteria JSON
-        structured_criteria_response = self.llm.invoke(
+        structured_criteria_response = await self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
         
         # Clean up the JSON
-        structured_criteria = self._parse_llm_response(structured_criteria_response)
+        structured_criteria = await self._parse_llm_response(structured_criteria_response)
         if not structured_criteria:
             return {"error": "Failed to parse query"}
 
