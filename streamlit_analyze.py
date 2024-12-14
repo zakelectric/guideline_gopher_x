@@ -176,12 +176,12 @@ class MortgageGuidelinesAnalyzer:
 
         st.write("QUERY:", query)
         
-        structured_criteria_response = self.llm.invoke(
+        structured_criteria_response = await self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
 
         # Clean up the JSON
-        structured_criteria = self._parse_llm_response(structured_criteria_response)  
+        structured_criteria = await self._parse_llm_response(structured_criteria_response)  
         st.write("STRUCTURED CRITERIA", structured_criteria)
         if not structured_criteria:
             return {"error": "Failed to parse query"}
