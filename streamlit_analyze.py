@@ -138,38 +138,34 @@ class MortgageGuidelinesAnalyzer:
                 results = []
                 for chunk in relevant_chunks:
                     st.write("Starting chunk processing")
+                
+                    # Step 1: Format the messages
+                    messages = await self.guidelines_analyzer_prompt.format_messages(
+                        criteria=json.dumps(structured_criteria),
+                        content=chunk.page_content
+                    )
+                    st.write("MESSAGES:", messages)
                     
-                    try:
-                        # Step 1: Format the messages
-                        messages = await self.guidelines_analyzer_prompt.format_messages(
-                            criteria=json.dumps(structured_criteria),
-                            content=chunk.page_content
-                        )
-                        st.write("MESSAGES:", messages)
-                        
-                        # Step 2: Invoke the LLM
-                        analysis_response = await self.llm.invoke(messages)
-                        st.write("LLM invoked successfully")
-                        st.write("Response type:", type(analysis_response))
-                        st.write("Response content:", analysis_response.content)
-                        
-                        # Step 3: Parse the response
-                        analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response.content)
-                        st.write("Analysis parsed successfully")
-                        
-                        if analysis and analysis.get('matches', False):
-                            result = {
-                                "investor": chunk.metadata.get("investor", "Unknown"),
-                                "confidence": analysis.get('confidence_score', 0),
-                                "details": analysis.get('relevant_details', ''),
-                                "restrictions": analysis.get('restrictions', []),
-                                "source_content": chunk.page_content
-                            }
-                            results.append(result)
+                    # Step 2: Invoke the LLM
+                    analysis_response = await self.llm.invoke(messages)
+                    st.write("LLM invoked successfully")
+                    st.write("Response type:", type(analysis_response))
+                    st.write("Response content:", analysis_response.content)
+                    
+                    # Step 3: Parse the response
+                    analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response.content)
+                    st.write("Analysis parsed successfully")
+                    
+                    if analysis and analysis.get('matches', False):
+                        result = {
+                            "investor": chunk.metadata.get("investor", "Unknown"),
+                            "confidence": analysis.get('confidence_score', 0),
+                            "details": analysis.get('relevant_details', ''),
+                            "restrictions": analysis.get('restrictions', []),
+                            "source_content": chunk.page_content
+                        }
+                        results.append(result)
                             
-                    except Exception as e:
-                        st.write(f"Error in chunk processing: {str(e)}")
-                        st.write("Error type:", type(e))
         except Exception as e:
                         st.write("Error type:", type(e))
         
