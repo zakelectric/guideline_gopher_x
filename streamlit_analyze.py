@@ -135,6 +135,7 @@ class MortgageGuidelinesAnalyzer:
                 )
 
                 # Second pass: Use LLM to analyze each chunk thoroughly
+                structured_criteria = await structured_criteria
                 results = []
                 for chunk in relevant_chunks:
                     st.write("Starting chunk processing")
