@@ -86,28 +86,27 @@ class MortgageGuidelinesAnalyzer:
          # Prompt for analyzing tables and guidelines
         self.guidelines_analyzer_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a mortgage guidelines expert. Analyze the provided guideline 
-            content and determine if it matches the loan criteria. Consider both explicit and 
-            implicit requirements. Look for:
+            content and determine if it matches the loan criteria. Return your analysis in the following exact JSON format:
             
-            1. Direct matches of numerical criteria (LTV, credit score, etc.)
+            {
+                "matches": boolean,
+                "confidence_score": number,
+                "relevant_details": "string",
+                "restrictions": ["string"],
+                "credit_score": number,
+                "loan_to_value": number
+            }
+            
+            Analyze for:
+            1. Direct matches of numerical criteria (LTV, credit score)
             2. Program eligibility (loan type, purpose)
             3. Property type restrictions
-            4. Any other relevant restrictions or requirements
-            5. Ensure that the credit score / FICO requirements meet the needs of the query
-            6. LTV / loan-to-value requirements with a numerical value that is higher than the query requirement
+            4. Other relevant restrictions
+            5. Credit score / FICO requirements vs query needs
+            6. LTV / loan-to-value requirements vs query needs
             
-            Return a VALID JSON object with:
-            - matches: boolean
-            - confidence_score: 0-100
-            - relevant_details: string explaining the match or mismatch
-            - restrictions: array of important caveats or restrictions
-            - credit score: minimum credit score for program
-            - loan to value: maximum loan to value for program
-            
-            IMPORTANT: Ensure the response is a VALID JSON that can be parsed by json.loads()"""),
-            ("human", """Query criteria: {criteria}
-            
-            Guideline content: {content}""")
+            CRITICAL: Response must be ONLY the JSON object with no additional text."""),
+            ("human", """Query criteria: {criteria}\n\nGuideline content: {content}""")
         ])
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
