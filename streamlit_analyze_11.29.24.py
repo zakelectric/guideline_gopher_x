@@ -209,23 +209,25 @@ class MortgageGuidelinesAnalyzer:
         
         results = []
         for chunk in relevant_chunks:
-            messages = await self.guidelines_analyzer_prompt.format_messages(
-                criteria=json.dumps(structured_criteria),
-                content=chunk.page_content
-            )
+            st.write("Starting chunk processing")
             
-            analysis_response = await self.llm.invoke(messages)
-            
-            analysis = self._parse_llm_response(analysis_response)
-            
-            if analysis and analysis.get('matches', False):
-                results.append({
-                    "investor": chunk.metadata.get("investor", "Unknown"),
-                    "confidence": analysis.get('confidence_score', 0),
-                    "details": analysis.get('relevant_details', ''),
-                    "restrictions": analysis.get('restrictions', []),
-                    "source_url": chunk.metadata.get("s3_url", "")
-                })
+            try:
+                # Step 1: Format the messages
+                messages = await self.guidelines_analyzer_prompt.format_messages(
+                    criteria=json.dumps(structured_criteria),
+                    content=chunk.page_content
+                )
+                st.write("Messages formatted successfully")
+                
+                # Step 2: Invoke the LLM
+                analysis_response = await self.llm.invoke(messages)
+                st.write("LLM invoked successfully")
+                st.write("Response type:", type(analysis_response))
+                st.write("Response content:", analysis_response.content)
+                
+                # Step 3: Parse the response
+                analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response.content)
+                st.write("Analysis parsed successfully")
         
         seen_investors = set()
         unique_results = []

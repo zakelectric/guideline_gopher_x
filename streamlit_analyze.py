@@ -137,12 +137,13 @@ class MortgageGuidelinesAnalyzer:
                 # Second pass: Use LLM to analyze each chunk thoroughly
                 results = []
                 for chunk in relevant_chunks:
-                    analysis_response = await self.llm.invoke(
-                        self.guidelines_analyzer_prompt.format(
-                            criteria=json.dumps(structured_criteria),
-                            content=chunk.page_content
-                        )
+                    messages = await self.guidelines_analyzer_prompt.format_messages(
+                        criteria=json.dumps(structured_criteria),
+                        content=chunk.page_content
                     )
+                    
+                    analysis_response = await self.llm.invoke(messages)
+                    
                     st.write("ANALYSIS RESPONSE:", analysis_response.content)
 
                     # Convert the response to string if it's not already
