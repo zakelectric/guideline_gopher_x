@@ -137,43 +137,39 @@ class MortgageGuidelinesAnalyzer:
                 # Second pass: Use LLM to analyze each chunk thoroughly
                 results = []
                 for chunk in relevant_chunks:
-                    messages = await self.guidelines_analyzer_prompt.format_messages(
-                        criteria=json.dumps(structured_criteria),
-                        content=chunk.page_content
-                    )
+                    st.write("Starting chunk processing")
                     
-                    analysis_response = await self.llm.invoke(messages)
-                    
-                    st.write("ANALYSIS RESPONSE:", analysis_response.content)
-
-                    # Convert the response to string if it's not already
-                    if hasattr(analysis_response, 'content'):
-                        analysis_response = analysis_response.content
-                
-                    analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response)
-                    
-                    if analysis and analysis.get('matches', False):
-                        results.append({
-                            "investor": chunk.metadata.get("investor", "Unknown"),
-                            "confidence": analysis.get('confidence_score', 0),
-                            "details": analysis.get('relevant_details', ''),
-                            "restrictions": analysis.get('restrictions', []),
-                            "source_content": chunk.page_content
-                        })
-                
-                # Aggregate and deduplicate results by investor
-                final_results = await asyncio.to_thread(self._aggregate_results, results)
-                
-                return {
-                    "query_understanding": structured_criteria,
-                    "matching_investors": final_results,
-                    "total_matches": len(final_results)
-                }
-
-        except Exception as e:
-            st.error(f"Error processing {investor_prefix}: {str(e)}")
-            logging.error(f"Error processing {investor_prefix}: {str(e)}", exc_info=True)
-            return {}
+                    try:
+                        # Step 1: Format the messages
+                        messages = await self.guidelines_analyzer_prompt.format_messages(
+                            criteria=json.dumps(structured_criteria),
+                            content=chunk.page_content
+                        )
+                        st.write("Messages formatted successfully")
+                        
+                        # Step 2: Invoke the LLM
+                        analysis_response = await self.llm.invoke(messages)
+                        st.write("LLM invoked successfully")
+                        st.write("Response type:", type(analysis_response))
+                        st.write("Response content:", analysis_response.content)
+                        
+                        # Step 3: Parse the response
+                        analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response.content)
+                        st.write("Analysis parsed successfully")
+                        
+                        if analysis and analysis.get('matches', False):
+                            result = {
+                                "investor": chunk.metadata.get("investor", "Unknown"),
+                                "confidence": analysis.get('confidence_score', 0),
+                                "details": analysis.get('relevant_details', ''),
+                                "restrictions": analysis.get('restrictions', []),
+                                "source_content": chunk.page_content
+                            }
+                            results.append(result)
+                            
+                    except Exception as e:
+                        st.write(f"Error in chunk processing: {str(e)}")
+                        st.write("Error type:", type(e))
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
