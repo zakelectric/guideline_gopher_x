@@ -143,7 +143,7 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
-                    
+                    st.write("ANALYSIS RESPONSE:", analysis_response.content)
                     # Convert the response to string if it's not already
                     if hasattr(analysis_response, 'content'):
                         analysis_response = analysis_response.content
