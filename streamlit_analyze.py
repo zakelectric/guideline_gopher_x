@@ -177,7 +177,7 @@ class MortgageGuidelinesAnalyzer:
         st.write("QUERY:", query)
         
         structured_criteria_response = await self.llm.invoke(
-            self.query_parser_prompt.format(query=query)
+            self.query_parser_prompt.format_messages(query=query)
         )
 
         # Clean up the JSON
