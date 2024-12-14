@@ -144,7 +144,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                     
-                    analysis = self._parse_llm_response(analysis_response)
+                    analysis = await asyncio.tothread(self._parse_llm_response, analysis_response)
                     
                     if analysis and analysis.get('matches', False):
                         results.append({
@@ -156,7 +156,7 @@ class MortgageGuidelinesAnalyzer:
                         })
                 
                 # Aggregate and deduplicate results by investor
-                final_results = self._aggregate_results(results)
+                final_results = await asyncio.tothread(self._aggregate_results, results)
                 
                 return {
                     "query_understanding": structured_criteria,
@@ -169,7 +169,7 @@ class MortgageGuidelinesAnalyzer:
             logging.error(f"Error processing {investor_prefix}: {str(e)}", exc_info=True)
             return []
         
-    def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
+    async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
         # Simple implementation - keep unique investors
         seen_investors = set()
@@ -239,7 +239,7 @@ class MortgageGuidelinesAnalyzer:
             st.error(f"Error in query processing: {str(e)}")
             return {"error": f"Query processing failed: {str(e)}"}
 
-    def _parse_llm_response(self, response):
+    async def _parse_llm_response(self, response):
         try:
             if hasattr(response, 'content'):
                 # Clean up the content - remove markdown code blocks and extra whitespace
