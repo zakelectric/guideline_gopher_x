@@ -133,7 +133,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=5
                 )
-
+                st.write("RELEVANT CHUNKS:", relevant_chunks)
                 # Second pass: Use LLM to analyze each chunk thoroughly
                 results = []
                 for chunk in relevant_chunks:
