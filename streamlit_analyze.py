@@ -166,6 +166,7 @@ class MortgageGuidelinesAnalyzer:
                             "source_content": chunk.page_content
                         }
                         results.append(result)
+                return results
                             
         except Exception as e:
                         st.write("Error type:", type(e))
@@ -242,21 +243,21 @@ class MortgageGuidelinesAnalyzer:
 
     async def _parse_llm_response(self, response):
         try:
-            if hasattr(response, 'content'):
-                # Clean up the content - remove markdown code blocks and extra whitespace
-                content = response.content
-                content = content.replace('```json', '').replace('```', '').strip()
-                st.write("Cleaned content:", content)  # Debug
-                return json.loads(content)
-            return None
+            # Get the content if it's a response object
+            content = response.content if hasattr(response, 'content') else response
+            
+            # Clean up the content
+            content = content.replace('```json', '').replace('```', '').strip()
+            st.write("Cleaned content:", content)
+            
+            return json.loads(content)
         except json.JSONDecodeError as e:
             st.write(f"JSON decode error: {e}")
-            # If direct parsing fails, try to extract JSON with regex
             try:
-                json_match = re.search(r'\{.*\}', str(response.content), re.DOTALL)
+                json_match = re.search(r'\{.*\}', str(content), re.DOTALL)
                 if json_match:
                     extracted = json_match.group(0)
-                    st.write("Extracted JSON:", extracted)  # Debug
+                    st.write("Extracted JSON:", extracted)
                     return json.loads(extracted)
             except Exception as e:
                 st.write(f"Regex extract error: {e}")
