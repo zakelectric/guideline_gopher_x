@@ -135,41 +135,34 @@ class MortgageGuidelinesAnalyzer:
                 )
 
                 # Second pass: Use LLM to analyze each chunk thoroughly
-                results = []
-                for chunk in relevant_chunks:
-                    st.write("Starting chunk processing")
-                    st.write("STRUCTURED CRITERIA:", structured_criteria)
-                    st.write("CHUNK PAGE CONTENT:", chunk.page_content)
-                    # Step 1: Format the messages
-                    messages = await self.guidelines_analyzer_prompt.format_messages(
-                        criteria=json.dumps(structured_criteria),
-                        content=chunk.page_content
+                try:
+                    final_analysis = await asyncio.to_thread(
+                        self.llm.invoke,
+                        self.guidelines_analyzer_prompt.format(
+                            table_results=json.dumps(structured_criteria),
+                            content=relevant_chunks.page_content
+                        )
                     )
-                    st.write("MESSAGES:", messages)
                     
-                    # Step 2: Invoke the LLM
-                    analysis_response = await self.llm.invoke(messages)
-                    st.write("LLM invoked successfully")
-                    st.write("Response type:", type(analysis_response))
-                    st.write("Response content:", analysis_response.content)
-                    
-                    # Step 3: Parse the response
-                    analysis = await asyncio.to_thread(self._parse_llm_response, analysis_response.content)
-                    st.write("Analysis parsed successfully")
+                    analysis = self._parse_llm_response(final_analysis)
                     
                     if analysis and analysis.get('matches', False):
-                        result = {
-                            "investor": chunk.metadata.get("investor", "Unknown"),
+                        return [{
+                            "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
                             "confidence": analysis.get('confidence_score', 0),
                             "details": analysis.get('relevant_details', ''),
                             "restrictions": analysis.get('restrictions', []),
-                            "source_content": chunk.page_content
-                        }
-                        results.append(result)
-                return results
-                            
-        except Exception as e:
-                        st.write("Error type:", type(e))
+                            "credit score": analysis.get('credit score', 0),
+                            "loan to value": analysis.get('loan to value', 0),
+                            "footnotes": analysis.get('footnotes', []),
+                            "source_url": relevant_chunks[0].metadata.get("s3_url", "")
+                        }]
+                    
+                except Exception as e:
+                    st.error(f"Error in final analysis: {e}")
+                    return []
+
+                return []
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
@@ -184,12 +177,11 @@ class MortgageGuidelinesAnalyzer:
 
     async def query_guidelines(self, query: str):
         
-        # Parse query into structured criteria JSON
-        messages = self.query_parser_prompt.format_messages(query=query)
-        structured_criteria_response = await self.llm.invoke(messages)
-        
-        # Clean up the JSON
-        structured_criteria = await self._parse_llm_response(structured_criteria_response.content)
+        structured_criteria_response = self.llm.invoke(
+            self.query_parser_prompt.format(query=query)
+        )
+        structured_criteria = self._parse_llm_response(structured_criteria_response)  
+       
         if not structured_criteria:
             return {"error": "Failed to parse query"}
 
