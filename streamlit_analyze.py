@@ -46,7 +46,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.llm = ChatOpenAI(
-        model_name="gpt-4o-mini",
+        model_name="gpt-4o",
         temperature=0,
         openai_api_key=api_key
     )
@@ -177,6 +177,8 @@ class MortgageGuidelinesAnalyzer:
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
+
+        # Clean up the JSON
         structured_criteria = self._parse_llm_response(structured_criteria_response)  
         st.write("STRUCTURED CRITERIA", structured_criteria)
         if not structured_criteria:
