@@ -170,6 +170,8 @@ class MortgageGuidelinesAnalyzer:
                     except Exception as e:
                         st.write(f"Error in chunk processing: {str(e)}")
                         st.write("Error type:", type(e))
+        except Exception as e:
+                        st.write("Error type:", type(e))
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
