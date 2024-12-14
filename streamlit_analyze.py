@@ -135,32 +135,31 @@ class MortgageGuidelinesAnalyzer:
                 )
 
                 # Second pass: Use LLM to analyze each chunk thoroughly
-                try:
-                    final_analysis = await asyncio.to_thread(
-                        self.llm.invoke,
-                        self.guidelines_analyzer_prompt.format(
-                            table_results=json.dumps(structured_criteria),
-                            content=relevant_chunks.page_content
-                        )
+                final_analysis = await asyncio.to_thread(
+                    self.llm.invoke,
+                    self.guidelines_analyzer_prompt.format(
+                        table_results=json.dumps(structured_criteria),
+                        content=relevant_chunks.page_content
                     )
+                )
+                
+                analysis = self._parse_llm_response(final_analysis)
+                
+                if analysis and analysis.get('matches', False):
+                    return [{
+                        "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
+                        "confidence": analysis.get('confidence_score', 0),
+                        "details": analysis.get('relevant_details', ''),
+                        "restrictions": analysis.get('restrictions', []),
+                        "credit score": analysis.get('credit score', 0),
+                        "loan to value": analysis.get('loan to value', 0),
+                        "footnotes": analysis.get('footnotes', []),
+                        "source_url": relevant_chunks[0].metadata.get("s3_url", "")
+                    }]
                     
-                    analysis = self._parse_llm_response(final_analysis)
-                    
-                    if analysis and analysis.get('matches', False):
-                        return [{
-                            "name of investor": relevant_chunks[0].metadata.get("investor", "Unknown"),
-                            "confidence": analysis.get('confidence_score', 0),
-                            "details": analysis.get('relevant_details', ''),
-                            "restrictions": analysis.get('restrictions', []),
-                            "credit score": analysis.get('credit score', 0),
-                            "loan to value": analysis.get('loan to value', 0),
-                            "footnotes": analysis.get('footnotes', []),
-                            "source_url": relevant_chunks[0].metadata.get("s3_url", "")
-                        }]
-                    
-                except Exception as e:
-                    st.error(f"Error in final analysis: {e}")
-                    return []
+        except Exception as e:
+            st.error(f"Error in final analysis: {e}")
+            return []
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
