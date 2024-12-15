@@ -153,8 +153,8 @@ class MortgageGuidelinesAnalyzer:
                         "confidence": analysis.get('confidence_score', 0),
                         "details": analysis.get('relevant_details', ''),
                         "restrictions": analysis.get('restrictions', []),
-                        "credit score": analysis.get('credit score', 0),
-                        "loan to value": analysis.get('loan to value', 0),
+                        "credit score": analysis.get('credit_score', 0),
+                        "loan to value": analysis.get('loan_to_value', 0),
                         "footnotes": analysis.get('footnotes', []),
                         "source_url": relevant_chunks[0].metadata.get("s3_url", "")
                     }]
