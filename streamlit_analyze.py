@@ -144,7 +144,6 @@ class MortgageGuidelinesAnalyzer:
                     )
 
                 analysis = self._parse_llm_response(analysis_response)
-                st.write("ANALYSIS:", analysis)
                 
                 if analysis and analysis.get('matches', False):
                     return [{
@@ -209,12 +208,12 @@ class MortgageGuidelinesAnalyzer:
                     self.bucket_name,
                     investor_prefix,
                     query,
-                    structured_criteria  # This is where structured_criteria is used
+                    structured_criteria
                 )
                 tasks.append(task)
 
             all_results = await asyncio.gather(*tasks)
-            
+            st.write("ALL RESULTS:", all_results)
             # Process results
             results = [item for sublist in all_results for item in sublist]
             seen_investors = set()
