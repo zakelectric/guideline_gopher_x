@@ -111,7 +111,7 @@ class MortgageGuidelinesAnalyzer:
         ])
 
     async def load_and_query_investor(self, s3_client, bucket: str, investor_prefix: str, query: str, structured_criteria: dict):
-        st.write(f"Processing investor {investor_prefix} with criteria:", structured_criteria)
+        #st.write(f"Processing investor {investor_prefix} with criteria:", structured_criteria)
         try:
             # Load the vector stores
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -133,7 +133,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=5
                 )
-
+                st.write("RELEVANT CHUNKS:", relevant_chunks)
                 # Use LLM to analyze each chunk thoroughly
                 for chunk in relevant_chunks:
                     analysis_response = self.llm.invoke(
