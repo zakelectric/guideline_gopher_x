@@ -131,7 +131,7 @@ class MortgageGuidelinesAnalyzer:
                 relevant_chunks = await asyncio.to_thread(
                     self.vector_store.similarity_search,
                     query,
-                    k=5
+                    k=10
                 )
 
                 # Use LLM to analyze each chunk thoroughly
@@ -218,7 +218,6 @@ class MortgageGuidelinesAnalyzer:
             results = [item for sublist in all_results for item in sublist]
             seen_investors = set()
             unique_results = []
-            st.write("RESULTS:", results)
 
             for result in results:
                 if result['name of investor'] not in seen_investors:
