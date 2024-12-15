@@ -198,9 +198,6 @@ class MortgageGuidelinesAnalyzer:
             )
             if 'CommonPrefixes' not in response:
                 return {"error": "No guidelines found"}
-
-            # Debug - print first task creation
-            st.write("Creating first task with criteria:", structured_criteria)
             
             # Create tasks for each guideline in S3
             tasks = []
