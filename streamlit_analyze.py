@@ -133,7 +133,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=5
                 )
-                st.write("RELEVANT CHUNKS:", relevant_chunks)
+
                 # Use LLM to analyze each chunk thoroughly
                 for chunk in relevant_chunks:
                     analysis_response = await asyncio.to_thread(self.llm.invoke,
@@ -143,6 +143,7 @@ class MortgageGuidelinesAnalyzer:
                         )
                     )
                 
+                st.write("ANALYSIS RESPONSE:", analysis_response)
                 analysis = self._parse_llm_response(analysis_response)
                 
                 if analysis and analysis.get('matches', False):
