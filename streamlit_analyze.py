@@ -136,12 +136,12 @@ class MortgageGuidelinesAnalyzer:
                 st.write("RELEVANT CHUNKS:", relevant_chunks)
                 # Use LLM to analyze each chunk thoroughly
                 for chunk in relevant_chunks:
-                    analysis_response = await self.llm.invoke(
+                    analysis_response = await asyncio.to_thread(self.llm.invoke,
                         self.guidelines_analyzer_prompt.format(
                             criteria=json.dumps(structured_criteria),
                             content=chunk.page_content
-                )
-            )
+                        )
+                    )
                 
                 analysis = self._parse_llm_response(analysis_response)
                 
