@@ -142,8 +142,7 @@ class MortgageGuidelinesAnalyzer:
                             content=chunk.page_content
                         )
                     )
-                
-                st.write("ANALYSIS RESPONSE:", analysis_response)
+
                 analysis = self._parse_llm_response(analysis_response)
                 st.write("ANALYSIS:", analysis)
                 
