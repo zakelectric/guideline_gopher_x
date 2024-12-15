@@ -152,16 +152,16 @@ class MortgageGuidelinesAnalyzer:
                         "confidence": analysis.get('confidence_score', 0),
                         "details": analysis.get('relevant_details', ''),
                         "restrictions": analysis.get('restrictions', []),
-                        "credit score": analysis.get('credit_score', 0),
-                        "loan to value": analysis.get('loan_to_value', 0),
+                        "credit_score": analysis.get('credit_score', 0),  # Changed from "credit score"
+                        "loan_to_value": analysis.get('loan_to_value', 0),  # Changed from "loan to value"
+                        "footnotes": analysis.get('footnotes', []),
+                        "source_url": relevant_chunks[0].metadata.get("s3_url", "")
                     }]
                     
         except Exception as e:
             st.error(f"Error in final analysis: {e}")
             return []
         
-        # "footnotes": analysis.get('footnotes', []),
-        # "source_url": relevant_chunks[0].metadata.get("s3_url", "")
         
     async def _aggregate_results(self, results: List[Dict]) -> List[Dict]:
         """Aggregate and deduplicate results by investor."""
