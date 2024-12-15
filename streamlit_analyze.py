@@ -216,7 +216,6 @@ class MortgageGuidelinesAnalyzer:
                 tasks.append(task)
 
             all_results = await asyncio.gather(*tasks)
-            st.write("ALL RESULTS:", all_results)
 
             # Process results
             results = [item for sublist in all_results for item in sublist]
@@ -229,8 +228,6 @@ class MortgageGuidelinesAnalyzer:
                     seen_investors.add(result['name of investor'])
                     unique_results.append(result)
 
-            st.write("SEEN INVESTORS:", seen_investors)
-            st.write("UNIQUE RESULTS:", unique_results)
             return {
                 "query_understanding": structured_criteria,
                 "matching_investors": unique_results,
