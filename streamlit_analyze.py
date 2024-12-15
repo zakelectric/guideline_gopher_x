@@ -225,6 +225,8 @@ class MortgageGuidelinesAnalyzer:
                     seen_investors.add(result['name of investor'])
                     unique_results.append(result)
 
+            st.write("SEEN INVESTORS:", seen_investors)
+            st.write("UNIQUE RESULTS:", unique_results)
             return {
                 "query_understanding": structured_criteria,
                 "matching_investors": unique_results,
@@ -232,7 +234,6 @@ class MortgageGuidelinesAnalyzer:
             }
         except Exception as e:
             st.error(f"Error in query processing: {str(e)}")
-            return {"error": f"Query processing failed: {str(e)}"}
 
     def _parse_llm_response(self, response):
         try:
