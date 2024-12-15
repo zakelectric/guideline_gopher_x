@@ -175,16 +175,15 @@ class MortgageGuidelinesAnalyzer:
     async def query_guidelines(self, query: str):
         st.write("QUERY:", query)
         
-        # First format the messages
-        messages = self.query_parser_prompt.format_messages(query=query)
+        structured_criteria_response = self.llm.invoke(
+            self.query_parser_prompt.format(query=query)
+        )
+        st.write("STRUCTURED CRITERIA", structured_criteria_response)
+        structured_criteria = self._parse_llm_response(structured_criteria_response)
         
-        # Then invoke the LLM with the formatted messages
-        structured_criteria_response = await self.llm.invoke(messages)
         
-        # Parse the response
-        structured_criteria = await self._parse_llm_response(structured_criteria_response.content)
-        st.write("STRUCTURED CRITERIA", structured_criteria)
         if not structured_criteria:
+
             return {"error": "Failed to parse query"}
 
         try:
