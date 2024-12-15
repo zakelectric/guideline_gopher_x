@@ -46,7 +46,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.llm = ChatOpenAI(
-        model_name="gpt-4o",
+        model_name="gpt-4o-mini",
         temperature=0,
         openai_api_key=api_key
     )
@@ -178,9 +178,11 @@ class MortgageGuidelinesAnalyzer:
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
+
         st.write("STRUCTURED CRITERIA", structured_criteria_response)
         structured_criteria = self._parse_llm_response(structured_criteria_response)
         
+        st.write("PARSED RESPONSE FOR STRUCTRED CRITERIA:", structured_criteria)
         
         if not structured_criteria:
 
@@ -233,26 +235,27 @@ class MortgageGuidelinesAnalyzer:
             st.error(f"Error in query processing: {str(e)}")
             return {"error": f"Query processing failed: {str(e)}"}
 
-    async def _parse_llm_response(self, response):
+    def _parse_llm_response(self, response):
         try:
-            # Get the content if it's a response object
+            # If it's a full response object with content attribute
             content = response.content if hasattr(response, 'content') else response
             
-            # Clean up the content
-            content = content.replace('```json', '').replace('```', '').strip()
-            st.write("Cleaned content:", content)
+            # Find the JSON content between ```json and ```
+            json_match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                return json.loads(json_str)
+                
+            # If no markdown blocks, try to find JSON directly
+            json_match = re.search(r'\{.*?\}', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group(0))
+                
+            return None
             
-            return json.loads(content)
-        except json.JSONDecodeError as e:
-            st.write(f"JSON decode error: {e}")
-            try:
-                json_match = re.search(r'\{.*\}', str(content), re.DOTALL)
-                if json_match:
-                    extracted = json_match.group(0)
-                    st.write("Extracted JSON:", extracted)
-                    return json.loads(extracted)
-            except Exception as e:
-                st.write(f"Regex extract error: {e}")
+        except Exception as e:
+            st.write(f"Error parsing LLM response: {str(e)}")
+            st.write("Raw content:", content)
             return None
 
 def main():
