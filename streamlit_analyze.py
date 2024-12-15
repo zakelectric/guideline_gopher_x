@@ -156,6 +156,9 @@ class MortgageGuidelinesAnalyzer:
                         "footnotes": analysis.get('footnotes', []),
                         "source_url": relevant_chunks[0].metadata.get("s3_url", "")
                     }]
+                
+                # Make sure to return an empty list if null
+                return []
                     
         except Exception as e:
             st.error(f"Error in final analysis: {e}")
@@ -220,7 +223,7 @@ class MortgageGuidelinesAnalyzer:
             seen_investors = set()
             unique_results = []
             st.write("RESULTS:", results)
-            
+
             for result in results:
                 if result['name of investor'] not in seen_investors:
                     seen_investors.add(result['name of investor'])
