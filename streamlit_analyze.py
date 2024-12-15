@@ -134,16 +134,16 @@ class MortgageGuidelinesAnalyzer:
                     k=5
                 )
 
-                # Second pass: Use LLM to analyze each chunk thoroughly
-                final_analysis = await asyncio.to_thread(
-                    self.llm.invoke,
-                    self.guidelines_analyzer_prompt.format(
-                        table_results=json.dumps(structured_criteria),
-                        content=relevant_chunks.page_content
-                    )
+                # Use LLM to analyze each chunk thoroughly
+                for chunk in relevant_chunks:
+                    analysis_response = self.llm.invoke(
+                        self.guidelines_analyzer_prompt.format(
+                            criteria=json.dumps(structured_criteria),
+                            content=chunk.page_content
                 )
+            )
                 
-                analysis = self._parse_llm_response(final_analysis)
+                analysis = self._parse_llm_response(analysis_response)
                 
                 if analysis and analysis.get('matches', False):
                     return [{
@@ -173,17 +173,14 @@ class MortgageGuidelinesAnalyzer:
         return unique_results
 
     async def query_guidelines(self, query: str):
-        st.write("QUERY:", query)
-        
+
+        # Get JSON object from query
         structured_criteria_response = self.llm.invoke(
             self.query_parser_prompt.format(query=query)
         )
-
-        st.write("STRUCTURED CRITERIA", structured_criteria_response)
+        # Turn JSON string into true JSON
         structured_criteria = self._parse_llm_response(structured_criteria_response)
-        
-        st.write("PARSED RESPONSE FOR STRUCTRED CRITERIA:", structured_criteria)
-        
+                
         if not structured_criteria:
 
             return {"error": "Failed to parse query"}
