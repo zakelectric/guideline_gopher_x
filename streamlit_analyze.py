@@ -46,7 +46,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.llm = ChatOpenAI(
-        model_name="gpt-4o-mini",
+        model_name="gpt-4o",
         temperature=0,
         openai_api_key=api_key
     )
@@ -214,6 +214,7 @@ class MortgageGuidelinesAnalyzer:
 
             all_results = await asyncio.gather(*tasks)
             st.write("ALL RESULTS:", all_results)
+
             # Process results
             results = [item for sublist in all_results for item in sublist]
             seen_investors = set()
