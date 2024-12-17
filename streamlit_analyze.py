@@ -119,7 +119,7 @@ class MortgageGuidelinesAnalyzer:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     await asyncio.to_thread(s3_client.download_file, bucket, file_key, local_path)
-                    
+                st.write("LOCAL PATH:", local_path)
                 self.vector_store = await asyncio.to_thread(
                     FAISS.load_local, 
                     temp_dir, 
@@ -133,7 +133,7 @@ class MortgageGuidelinesAnalyzer:
                     query,
                     k=10
                 )
-
+                st.write("RELEVANT CHUNKS:", relevant_chunks)
                 # Use LLM to analyze each chunk thoroughly
                 for chunk in relevant_chunks:
                     analysis_response = await asyncio.to_thread(self.llm.invoke,
