@@ -119,8 +119,8 @@ class MortgageGuidelinesAnalyzer:
                     file_key = f"{investor_prefix}{'index'}{ext}"
                     local_path = os.path.join(temp_dir, f"index{ext}")
                     await asyncio.to_thread(s3_client.download_file, bucket, file_key, local_path)
-                st.write("LOCAL PATH:", local_path)
-                st.write("FILE KEY:", file_key)
+                    st.write("LOCAL PATH:", local_path)
+                    st.write("FILE KEY:", file_key)
                 self.vector_store = await asyncio.to_thread(
                     FAISS.load_local, 
                     temp_dir, 
