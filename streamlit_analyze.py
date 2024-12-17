@@ -144,6 +144,7 @@ class MortgageGuidelinesAnalyzer:
                     )
 
                 analysis = self._parse_llm_response(analysis_response)
+                st.write("ANALYSIS", analysis)
                 
                 if analysis and analysis.get('matches', False):
                     return [{
