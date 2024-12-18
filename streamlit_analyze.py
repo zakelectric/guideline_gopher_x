@@ -94,8 +94,8 @@ class MortgageGuidelinesAnalyzer:
             2. Purpose. Ensure that the purpose (refinance, purchase, etc.). If purpose is blank, ignore.
             3. Property type restrictions. Note any property type restrictions.
             4. Any other relevant restrictions or requirements.
-            5. Credit score / FICO. Ensure that the relevant section contains a FICO / credit score that is lower than the query, signifying that the query contains a qualifying credit score.
-            6. LTV / loan-to-value requirements. Ensure that the relevant section contains a LTV Loan-to-value with a numerical value that is higher than the query requirement, signifying the query contains an LTV requirement that can be satisfied by the guideline.
+            5. What is the MINIMUM credit / FICO score for the loan product in question?
+            6. What is the MAXIMUM ltv / loan-to-value for the loan product in question?
             
             Return a VALID JSON object with:
             - matches: boolean
