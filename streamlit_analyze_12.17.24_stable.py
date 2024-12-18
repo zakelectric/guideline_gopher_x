@@ -89,21 +89,20 @@ class MortgageGuidelinesAnalyzer:
             content and determine if it matches the loan criteria. Consider both explicit and 
             implicit requirements. Look for:
             
-            1. Loan type match. First be ABSOLUTELY CERTAIN that the loan_type (e.g., DSCR, Conventional, FHA, bank statement, VA, ITIN, etc.) exists within the guideline or matrix. If it does not, return matches=FALSE immediately.
-               If you have found a loan type match, extract relevant information from this section.
-            2. Purpose. Ensure that the purpose (refinance, purchase, etc.). If purpose is blank, ignore.
-            3. Property type restrictions. Note any property type restrictions.
-            4. Any other relevant restrictions or requirements.
-            5. Credit score / FICO. Ensure that the relevant section contains a FICO / credit score that is lower than the query, signifying that the query contains a qualifying credit score.
-            6. LTV / loan-to-value requirements. Ensure that the relevant section contains a LTV Loan-to-value with a numerical value that is higher than the query requirement, signifying the query contains an LTV requirement that can be satisfied by the guideline.
+            1. Direct matches of numerical criteria (LTV, credit score, etc.)
+            2. Program eligibility (loan type, purpose)
+            3. Property type restrictions
+            4. Any other relevant restrictions or requirements
+            5. Ensure that the credit score / FICO requirements meet the needs of the query
+            6. LTV / loan-to-value requirements with a numerical value that is higher than the query requirement
             
             Return a VALID JSON object with:
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string explaining the match or mismatch
             - restrictions: array of important caveats or restrictions
-            - credit score: minimum credit score for relevant section contained in guideline/matrix
-            - loan to value: maximum loan to value for relevant section contained in guideline/matrix
+            - credit score: minimum credit score for program
+            - loan to value: maximum loan to value for program
             
             IMPORTANT: Ensure the response is a VALID JSON that can be parsed by json.loads()"""),
             ("human", """Query criteria: {criteria}
