@@ -46,7 +46,7 @@ class MortgageGuidelinesAnalyzer:
     def __init__(self, api_key: str):
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.llm = ChatOpenAI(
-        model_name="gpt-4o",
+        model_name="gpt-4o-mini",
         temperature=0,
         openai_api_key=api_key
     )
@@ -144,6 +144,7 @@ class MortgageGuidelinesAnalyzer:
                     )
 
                 analysis = self._parse_llm_response(analysis_response)
+                st.write("ANALYSIS:", analysis)
                 
                 if analysis and analysis.get('matches', False):
                     return [{
