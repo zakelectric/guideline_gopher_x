@@ -94,16 +94,16 @@ class MortgageGuidelinesAnalyzer:
             2. Purpose. Ensure that the purpose (refinance, purchase, etc.). If purpose is blank, ignore.
             3. Property type restrictions. Note any property type restrictions.
             4. Any other relevant restrictions or requirements.
-            5. What is the MINIMUM credit / FICO score for the loan product in question?
-            6. What is the MAXIMUM ltv / loan-to-value for the loan product in question?
+            5. MINIMUM credit/FICO score for a {loan_type} loan.
+            6. MAXIMUM ltv/loan-to-value {loan_type} loan.
             
             Return a VALID JSON object with:
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string explaining the match or mismatch
             - restrictions: array of important caveats or restrictions
-            - credit score: minimum credit score for relevant section contained in guideline/matrix
-            - loan to value: maximum loan to value for relevant section contained in guideline/matrix
+            - credit score: minimum credit score for a {loan_type} loan
+            - loan to value: maximum loan to value for a {loan_type} loan
             
             IMPORTANT: Ensure the response is a VALID JSON that can be parsed by json.loads()"""),
             ("human", """Query criteria: {criteria}
@@ -140,6 +140,7 @@ class MortgageGuidelinesAnalyzer:
                         self.guidelines_analyzer_prompt.format(
                             criteria=json.dumps(structured_criteria),
                             content=chunk.page_content
+                            loan_type=structured_criteria.get('loan_type', 'unspecified')
                         )
                     )
 
