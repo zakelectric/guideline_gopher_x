@@ -139,7 +139,7 @@ class MortgageGuidelinesAnalyzer:
                     analysis_response = await asyncio.to_thread(self.llm.invoke,
                         self.guidelines_analyzer_prompt.format(
                             criteria=json.dumps(structured_criteria),
-                            content=chunk.page_content
+                            content=chunk.page_content,
                             loan_type=structured_criteria.get('loan_type', 'unspecified')
                         )
                     )
