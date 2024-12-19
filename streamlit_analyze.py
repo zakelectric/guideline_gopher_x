@@ -94,16 +94,16 @@ class MortgageGuidelinesAnalyzer:
             2. Purpose. Ensure that the purpose (refinance, purchase, etc.). If purpose is blank, ignore.
             3. Property type restrictions. Note any property type restrictions.
             4. Any other relevant restrictions or requirements.
-            5. MINIMUM credit/FICO score for a {loan_type} loan.
-            6. MAXIMUM ltv/loan-to-value {loan_type} loan.
+            5. MINIMUM credit/FICO score
+            6. MAXIMUM ltv/loan-to-value
             
             Return a VALID JSON object with:
             - matches: boolean
             - confidence_score: 0-100
             - relevant_details: string explaining the match or mismatch
             - restrictions: array of important caveats or restrictions
-            - credit score: minimum credit score for a {loan_type} loan
-            - loan to value: maximum loan to value for a {loan_type} loan
+            - credit score: Find and return the minimum credit score for a {loan_type} loan
+            - loan to value: Find and return the maximum loan to value for a {loan_type} loan
             
             IMPORTANT: Ensure the response is a VALID JSON that can be parsed by json.loads()"""),
             ("human", """Query criteria: {criteria}
